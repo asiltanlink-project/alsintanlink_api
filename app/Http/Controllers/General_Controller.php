@@ -14,7 +14,7 @@ class General_Controller extends Controller
 
      $province = Province::all();
 
-     $final = array('regions'=>$province);
+     $final = array('provinces'=>$province);
      return array('status' => 1 ,'result'=>$final);
   }
 
@@ -23,7 +23,7 @@ class General_Controller extends Controller
      $province = Province::where('id', $request->province_id)->first();
      $regencies = $province->regencies;
 
-     $final = array('regions'=>$regencies);
+     $final = array('citys'=>$regencies);
      return array('status' => 1 ,'result'=>$final);
 
   }
@@ -33,7 +33,7 @@ class General_Controller extends Controller
      $regencie = Regency::where('id', $request->city_id)->first();
      $district = $regencie->districts;
 
-     $final = array('regions'=>$district);
+     $final = array('districts'=>$district);
      return array('status' => 1 ,'result'=>$final);
   }
 }

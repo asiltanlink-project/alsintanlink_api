@@ -8,6 +8,8 @@ use JWTAuth;
 use App\Models\Upja;
 use App\Models\Alsin;
 use App\Models\Farmer;
+use App\Models\Alsin_item;
+use App\Models\Alsin_type;
 use Illuminate\Http\Request;
 use App\Models\Transaction_order;
 use Illuminate\Support\Facades\DB;
@@ -136,6 +138,7 @@ class Farmer_Controller extends Controller
                        ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                        ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
                        ->select('alsins.id as alsin_id','alsin_types.id','alsin_types.name'
+                                ,'alsin_types.picture as alsin_type_picture'
                                 ,DB::raw("(select count(alsin_items.id)
                                         FROM alsin_items
                                         WHERE (alsin_items.alsin_id = alsins.id)
@@ -151,13 +154,14 @@ class Farmer_Controller extends Controller
                                    )
                       ->Where('upjas.id', $request->upja_id )
                       ->Where('alsin_types.alsin_other' , 0 )
-                      ->groupBy('alsin_id','alsin_types.id','alsin_types.name')
+                      ->groupBy('alsin_id','alsin_types.id','alsin_types.name','alsin_types.picture')
                       ->get();
 
     $other_service = DB::table('alsins')
                        ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                        ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
                        ->select('alsins.id as alsin_id','alsin_types.id','alsin_types.name'
+                                ,'alsin_types.picture as alsin_type_picture'
                                 ,DB::raw("(select count(alsin_items.id)
                                         FROM alsin_items
                                         WHERE (alsin_items.alsin_id = alsins.id)
@@ -173,7 +177,7 @@ class Farmer_Controller extends Controller
                                    )
                       ->Where('upjas.id', $request->upja_id )
                       ->Where('alsin_types.alsin_other' , 1 )
-                      ->groupBy('alsin_id','alsin_types.id','alsin_types.name')
+                      ->groupBy('alsin_id','alsin_types.id','alsin_types.name','alsin_types.picture')
                       ->get();
 
     $final = array('upja' => $upja ,'alsintan'=>$alsintan,'other_service'=>$other_service);
@@ -237,7 +241,63 @@ class Farmer_Controller extends Controller
 
   public function order_alsin(Request $request ){
 
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
 
+    // check stock larger than request
+    for($i = 0 ; $i < sizeof ($request->alsins)  ; $i ++){
+
+      // get available alsin
+      $alsintan = Alsin_item::select('alsin_items.id')
+                              ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                              ->Where('alsins.upja_id', $request->upja_id)
+                              ->Where('alsins.alsin_type_id', $request->alsins[$i]['alsin_type_id'])
+                              ->Where('alsin_items.status', 0  )
+                              ->get();
+
+      if(sizeof($alsintan) <  $request->alsins[$i]['total_item']){
+
+        $alsintan_type = Alsin_type::select('alsin_types.name')
+                                ->Where('alsin_types.id', $request->alsins[$i]['alsin_type_id'])
+                                ->first();
+
+        $final = array('message'=> 'Jumlah ' . $alsintan_type->name . ' Kurang dari yang diminta' );
+        return array('status' => 0 ,'result'=>$final);
+      }
+    }
+
+    // create order
+    $transaction_order = new Transaction_order ;
+    $transaction_order->farmer_id = $user_id;
+    $transaction_order->transport_cost = $request->transport_cost;
+    $transaction_order->total_cost = $request->total_cost;
+    $transaction_order->save();
+
+    for($i = 0 ; $i < sizeof ($request->alsins)  ; $i ++){
+
+      // get available alsin
+      $alsintan = Alsin_item::select('alsin_items.id')
+                              ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                              ->Where('alsins.upja_id', $request->upja_id)
+                              ->Where('alsins.alsin_type_id', $request->alsins[$i]['alsin_type_id'])
+                              ->Where('alsin_items.status', 0  )
+                              ->get();
+
+      // looping for order alsin per item
+      for($j = 0 ; $j < $request->alsins[$i]['total_item'] ; $j ++){
+
+        // create detail alsin request
+        $transaction_order_child = new Transaction_order_child ;
+        $transaction_order_child->transaction_order_id = $transaction_order->id;
+        $transaction_order_child->alsin_item_id	 = $alsintan[$j]->id;
+        $transaction_order_child->land_area_range = $request->alsins[$i]['land_area_range'];
+        $transaction_order_child->cost = $request->alsins[$i]['cost'];
+        $transaction_order_child->save();
+      }
+    }
+
+    $final = array('message'=> 'Order Succsess'  );
     return array('status' => 1 ,'result'=>$final);
   }
 }

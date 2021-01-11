@@ -6,7 +6,10 @@ use Hash;
 use Config;
 use JWTAuth;
 use App\Models\Upja;
+use App\Models\Alsin;
+use App\Models\Alsin_item;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 class Upja_Controller extends Controller
@@ -83,6 +86,15 @@ class Upja_Controller extends Controller
       ];
   }
 
+  public function rules_update()
+  {
+      return [
+          'name' => 'required',
+          'leader_name' => 'required',
+          'district' => 'required',
+      ];
+  }
+
   public function register(Request $request){
 
     $validator = \Validator::make($request->all(), $this->rules());
@@ -110,5 +122,163 @@ class Upja_Controller extends Controller
 
     $final = array('message'=>'register succsess', 'upja'=>$blog);
     return array('status' => 1,'result'=>$final);
+  }
+
+  public function show_detail_upja(Request $request ){
+
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $upja = Upja::select('id','email','name','leader_name','village','class',
+                         'province','city','district')
+                  ->find( $user_id );
+
+    $final = array('upja'=>$upja);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function update_upja(Request $request){
+
+    $validator = \Validator::make($request->all(), $this->rules_update());
+
+    if ($validator->fails()) {
+
+      $final = array('message'=>$validator->errors()->first());
+      return array('status' => 0,'result' => $final) ;
+    }
+
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $blog = Upja::find($user_id);
+    $blog->name = $request->name;
+    $blog->province = $request->province;
+    $blog->city = $request->city;
+    $blog->district = $request->district;
+    $blog->leader_name = $request->leader_name;
+    $blog->village = $request->village;
+    $blog->class = $request->class;
+    $blog->save();
+
+    $final = array('message'=>'update succsess', 'upja'=>$blog);
+    return array('status' => 1,'result'=>$final);
+  }
+
+
+  public function insert_alsin(Request $request){
+
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    for($i = 0; $i < sizeof($request->alsins) ; $i ++){
+
+      $check_alsin = Alsin::select('alsin_types.name')
+                          ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                          ->where('upja_id', $user_id)
+                          ->where('alsin_type_id', $request->alsins[$i]["alsin_type_id"])
+                          ->first();
+
+      if($check_alsin != null){
+        $final = array('message'=>'alsin dengan tipe ' . $check_alsin->name . ' sudah ada. silahkan update!');
+        return array('status' => 0,'result'=>$final);
+      }
+      $alsin = new Alsin;
+      $alsin->upja_id = $user_id;
+      $alsin->alsin_type_id = $request->alsins[$i]["alsin_type_id"];
+      $alsin->cost = $request->alsins[$i]["cost"];
+      $alsin->save();
+
+      for($j = 0; $j < $request->alsins[$i]["total_item"] ; $j ++){
+
+        $alsin_item = new Alsin_item;
+        $alsin_item->alsin_id = $alsin->id;
+        $alsin_item->save();
+      }
+    }
+
+    $final = array('message'=>'update succsess');
+    return array('status' => 1,'result'=>$final);
+  }
+
+  public function show_all_alsin( ){
+
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $alsins = DB::table('alsins')
+                       ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                       ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                       ->select('alsins.id as alsin_id','alsin_types.id as alsin_type_id','alsin_types.name'
+                                ,'alsins.cost','alsins.picture'
+                                ,DB::raw("(select count(alsin_items.id)
+                                        FROM alsin_items
+                                        WHERE (alsin_items.alsin_id = alsins.id)
+                                        AND (alsin_items.status = 0)
+                                      ) as available
+                                   ")
+                                   ,DB::raw("(select count(alsin_items.id)
+                                           FROM alsin_items
+                                           WHERE (alsin_items.alsin_id = alsins.id)
+                                           AND (alsin_items.status = 1)
+                                         ) as not_available
+                                      ")
+                                      ,DB::raw("(select (available + not_available)
+                                            ) as total_item
+                                         ")
+                                   )
+                      ->Where('upjas.id', $user_id )
+                      // ->Where('alsin_types.alsin_other' , 0 )
+                      ->groupBy('alsins.id','alsin_types.id','alsin_types.name'
+                                ,'alsins.cost','alsins.picture')
+                      ->get();
+
+    $final = array('alsins'=>$alsins);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_detail_alsin(Request $request ){
+
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $alsin = DB::table('alsins')
+                       ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                       ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                       ->select('alsins.id as alsin_id','alsin_types.id as alsin_type_id','alsin_types.name'
+                                ,'alsins.cost','alsins.picture'
+                                ,DB::raw("(select count(alsin_items.id)
+                                        FROM alsin_items
+                                        WHERE (alsin_items.alsin_id = alsins.id)
+                                        AND (alsin_items.status = 0)
+                                      ) as available
+                                   ")
+                                   ,DB::raw("(select count(alsin_items.id)
+                                           FROM alsin_items
+                                           WHERE (alsin_items.alsin_id = alsins.id)
+                                           AND (alsin_items.status = 1)
+                                         ) as not_available
+                                      ")
+                                      ,DB::raw("(select (available + not_available)
+                                            ) as total_item
+                                         ")
+                                   )
+                      ->Where('upjas.id', $user_id )
+                      ->Where('alsin_types.id', $request->alsin_type_id )
+                      ->groupBy('alsins.id','alsin_types.id','alsin_types.name'
+                                ,'alsins.cost','alsins.picture')
+                      ->first();
+
+    $alsin_items = DB::table('alsin_items')
+                       ->select('alsin_items.id', 'alsin_items.vechile_code', 'alsin_items.status')
+                      ->Where('alsin_items.alsin_id',  $alsin->alsin_id )
+                      ->get();
+
+    $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items);
+    return array('status' => 1 ,'result'=>$final);
   }
 }
