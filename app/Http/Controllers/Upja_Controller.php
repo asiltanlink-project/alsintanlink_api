@@ -56,7 +56,7 @@ class Upja_Controller extends Controller
 
              $fixed_user = Upja::select('id','email_verify','email')->find($user->id);
 
-             $final = array('message' => $token, 'upja' => $fixed_user);
+             $final = array('message' => 'login sukses','token' => $token, 'upja' => $fixed_user);
              return array('status' => 1, 'result' => $final);
           }else{
 

@@ -60,7 +60,7 @@ class Farmer_Controller extends Controller
               $token = JWTAuth::attempt($credentials);
 
              $fixed_user = Farmer::select('id','phone_verify','phone_number')->find($user->id);
-             $final = array('message' => $token, 'farmer' => $fixed_user);
+             $final = array('message' => 'login sukses','token' => $token ,'farmer' => $fixed_user);
              return array('status' => 1, 'result' => $final);
           }else{
 
@@ -115,6 +115,13 @@ class Farmer_Controller extends Controller
   }
 
   public function show_upja(Request $request ){
+
+    $check_district = Helper::check_district($request->district);
+
+    if($check_district == null){
+      $final = array('message'=> "district not found");
+      return array('status' => 0 ,'result'=>$final);
+    }
 
     $upja = Upja::select('id','name','leader_name','village','class')
                     ->where('district', $request->district )
@@ -298,6 +305,108 @@ class Farmer_Controller extends Controller
     }
 
     $final = array('message'=> 'Order Succsess'  );
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_transaction(Request $request ){
+
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $transactions = DB::table('transaction_orders')
+                       ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
+                                , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
+                                , 'transaction_orders.payment_yn', 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
+                                ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
+                                )
+                      ->Join ('transaction_order_children', 'transaction_order_children.transaction_order_id',
+                              '=', 'transaction_orders.id')
+                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
+                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                      ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                      ->Where('transaction_orders.farmer_id',  $user_id )
+                      ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
+                               , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
+                               , 'transaction_orders.payment_yn', 'transaction_orders.delivery_time'
+                               , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
+                      ->get();
+
+    $final = array('meta'=>sizeof($transactions), 'transactions'=>$transactions);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+
+  public function show_detail_transaction(Request $request ){
+
+    $transaction = DB::table('transaction_orders')
+                       ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
+                                  , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
+                                  , 'transaction_orders.payment_yn', 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                  ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
+                                  ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
+                                )
+                      ->Join ('transaction_order_children', 'transaction_order_children.transaction_order_id',
+                              '=', 'transaction_orders.id')
+                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
+                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                      ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                      ->Where('transaction_orders.id',  $request->transaction_order_id )
+                      ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
+                               , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
+                               , 'transaction_orders.payment_yn', 'transaction_orders.delivery_time'
+                               , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
+                      ->first();
+
+    if($transaction == null){
+      $final = array('message'=> 'transaction tidak ditemukan');
+      return array('status' => 0 ,'result'=>$final);
+    }
+
+    $alsins = DB::table('transaction_order_children')
+                       ->select('alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name'
+                                  , DB::raw('count(transaction_order_children.id) as total_alsin')
+                                )
+                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
+                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                      ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                      ->Where('transaction_order_children.transaction_order_id',  $request->transaction_order_id )
+                      ->groupby('alsin_types.id', 'alsin_types.name')
+                      ->get();
+
+    $final = array('transaction'=>$transaction, 'alsins'=>$alsins);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_detail_transaction_alsin(Request $request ){
+
+    $check_alsin_type = Helper::check_alsin_type($request->alsin_type_id);
+
+    if($check_alsin_type == null){
+      $final = array('message' => 'alsin type tidak ditemukan');
+      return array('status' => 0 ,'result'=> $final);
+    }
+
+    $check_order = Helper::check_order($request->transaction_order_id);
+
+    if($check_order == null){
+      $final = array('message' => 'transaction type tidak ditemukan');
+      return array('status' => 0 ,'result'=> $final);
+    }
+
+    $alsins = DB::table('transaction_order_children')
+                       ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code'
+                                , 'alsin_items.status', 'transaction_order_children.cost'
+                                )
+                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
+                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                      ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                      ->Where('transaction_order_children.transaction_order_id',  $request->transaction_order_id )
+                      ->Where('alsin_types.id',  $request->alsin_type_id )
+                      ->get();
+
+    $final = array('alsin_items'=>$alsins);
     return array('status' => 1 ,'result'=>$final);
   }
 }

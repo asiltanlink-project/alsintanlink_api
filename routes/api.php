@@ -21,8 +21,14 @@ Route::group(['prefix' => 'location'],function ()
 {
   Route::get('/province', array('middleware' => 'cors', 'uses' => 'General_Controller@province' ));
   Route::get('/city/{province_id}', array('middleware' => 'cors', 'uses' => 'General_Controller@city' ));
+  Route::get('/city', array('middleware' => 'cors', 'uses' => 'General_Controller@city' ));
   Route::get('/district/{city_id}', array('middleware' => 'cors', 'uses' => 'General_Controller@district' ));
-
+  Route::get('/district', array('middleware' => 'cors', 'uses' => 'General_Controller@district' ));
+  
+  Route::group(['middleware' => ['assign.guard:farmer','jwt.farmer']],function ()
+  {
+    Route::get('/doc_testing', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@doc_testing' ));
+  });
 });
 
 Route::group(['prefix' => 'farmer'],function ()
@@ -37,6 +43,9 @@ Route::group(['prefix' => 'farmer'],function ()
     Route::get('/show_detail_upja/{upja_id}',array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_detail_upja' ) );
     Route::post('/generate_price', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@generate_price' )); // unused
     Route::post('/order_alsin', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@order_alsin' ));
+    Route::get('/show_transaction', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_transaction' ));
+    Route::get('/show_detail_transaction/{transaction_order_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_detail_transaction' ));
+    Route::get('/show_detail_transaction_alsin/{transaction_order_id}/{alsin_type_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_detail_transaction_alsin' ));
   });
 });
 
@@ -69,9 +78,13 @@ Route::group(['prefix' => 'admin'],function ()
 
   Route::group(['middleware' => ['assign.guard:admin','jwt.admin']],function ()
   {
-    Route::get('/show_farmer/{district}', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_farmer' ));
-    Route::get('/show_upja/{district}', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_upja' ));
-    Route::get('/show_detail_farmer/{farmer_id}', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_farmer' ));
-    Route::get('/show_detail_upja/{upja_id}', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_upja' ));
+    Route::get('/show_farmer', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_farmer' ));
+    Route::get('/show_upja', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_upja' ));
+    Route::get('/show_detail_farmer', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_farmer' ));
+    Route::get('/show_detail_upja', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_upja' ));
+    Route::get('/show_detail_alsin', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_alsin' ));
+    Route::get('/show_detail_alsin_item', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_alsin_item' ));
+    Route::get('/show_detail_transaction', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_transaction' ));
+    Route::get('/show_detail_transaction_alsin', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_transaction_alsin' ));
   });
 });
