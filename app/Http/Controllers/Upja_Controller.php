@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\Transaction_order_type;
 use App\Models\Transaction_order_child;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use App\Helpers\LogActivity as Helper;
 
 use App\Models\Other_Service\transaction_order_rmu;
 use App\Models\Other_Service\transaction_order_rice;
@@ -29,6 +30,9 @@ use App\Models\Upja_Ownership\transaction_upja_training;
 use App\Models\Upja_Ownership\transaction_upja_rice_seed;
 use App\Models\Upja_Ownership\transaction_upja_reparation;
 use App\Models\Upja_Ownership\trasansaction_upja_spare_part;
+
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class Upja_Controller extends Controller
 {
@@ -448,7 +452,7 @@ class Upja_Controller extends Controller
     $fixedtoken = JWTAuth::setToken($token)->toUser();
     $user_id = $fixedtoken->id;
 
-    $upja = Upja::select('upjas.id','upjas.email','upjas.name','upjas.leader_name','upjas.village','upjas.class',
+    $upja = Upja::select('upjas.id','upjas.email','upjas.name','upjas.leader_name','upjas.class',
                         'upjas.legality','indoregion_provinces.name as province','indoregion_regencies.name as city',
                         'indoregion_districts.name as district','indoregion_provinces.id as province_id',
                         'indoregion_regencies.id as city_id','indoregion_districts.id as district_id',
@@ -698,7 +702,8 @@ class Upja_Controller extends Controller
                       ->first();
 
     $alsin_items = DB::table('alsin_items')
-                       ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code', 'alsin_items.status')
+                       ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code',
+                                'alsin_items.status', 'alsin_items.description')
                       ->Where('alsin_items.alsin_id',  $alsin->alsin_id )
                       ->get();
 
@@ -734,7 +739,8 @@ class Upja_Controller extends Controller
     $fixedtoken = JWTAuth::setToken($token)->toUser();
     $user_id = $fixedtoken->id;
 
-    $alsin = Alsin_item::select('alsin_items.id','alsins.upja_id','alsin_items.vechile_code','alsin_items.status')
+    $alsin = Alsin_item::select('alsin_items.id','alsins.upja_id','alsin_items.vechile_code',
+                                'alsin_items.description','alsin_items.status')
                         ->where('alsin_items.id' , $request->alsin_item_id)
                         ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                         ->first();
@@ -749,6 +755,7 @@ class Upja_Controller extends Controller
     }
     $alsin->vechile_code = $request->vechile_code;
     $alsin->status = $request->status;
+    $alsin->description = $request->description;
     $alsin->save();
 
     $final = array('message'=>'update succsess');
@@ -962,15 +969,6 @@ class Upja_Controller extends Controller
       $transaction->transport_cost = $request->transport_cost;
       $total_cost = 0;
 
-      // for($i =0; $i< sizeof($request['alsins']) ; $i++ ){
-      //
-      //   $transaction_type = Transaction_order_type::find($request['alsins'][$i]['transaction_order_type_id']);
-      //   $transaction_type->cost = $request['alsins'][$i]['cost'];
-      //   $transaction_type->alsin_item_total = $request['alsins'][$i]['total_item'];
-      //   $transaction_type->save();
-      //
-      //   $total_cost += ($request['alsins'][$i]['cost'] * $request['alsins'][$i]['total_item'] );
-      // }
 
       for($j =0; $j< sizeof($request['alsin_items']) ; $j++ ){
 
@@ -985,19 +983,12 @@ class Upja_Controller extends Controller
 
         $transaction_type = Transaction_order_type::find($request['alsin_items'][$j]['transaction_order_type_id']);
         // $transaction_type->cost = $transaction_type->cost + $request['alsin_items'][$j]['cost'];
-        $transaction_type->cost = $transaction_type->cost + 5000;
+        $transaction_type->cost += $request['alsin_items'][$j]['cost'];
         $transaction_type->save();
 
-        // $total_cost += ($request['alsin_items'][$j]['cost']);
-        $total_cost += 5000;
+        $total_cost += ($request['alsin_items'][$j]['cost']);
+        // $total_cost += 5000;
       }
-
-      // for($j =0; $j< sizeof($request['alsin_items']) ; $j++ ){
-      //
-      //   $alsin_item  = Alsin_item::find($request['alsin_items'][$j]['alsin_item_id']);
-      //   $alsin_item->status = "Sedang Digunakan";
-      //   $alsin_item->save();
-      // }
 
       for($i = 0 ; $i < sizeof ($request['rmus'])  ; $i ++){
 
@@ -1102,8 +1093,6 @@ class Upja_Controller extends Controller
     //   return array('status' => 0 ,'result'=>$final);
     // }
 
-
-
     $transaction->status = $request->status;
     $transaction->save();
 
@@ -1161,7 +1150,7 @@ class Upja_Controller extends Controller
     $alsins = DB::table('alsin_items')
                       ->select('alsin_items.id as alsin_item_id',
                                'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
-                               'alsin_items.vechile_code'
+                               'alsin_items.vechile_code','alsin_items.description'
                                ,DB::raw("(SELECT transaction_order_types.id FROM transaction_order_types
                                    WHERE transaction_order_types.transaction_order_id = $request->transaction_order_id
                                    AND transaction_order_types.alsin_type_id = alsin_types.id
@@ -1178,8 +1167,12 @@ class Upja_Controller extends Controller
                                 ->Where('transaction_order_types.transaction_order_id',
                                         $request->transaction_order_id )
                          )
+                      ->where('alsin_types.name', 'like', '%' . $request->keyword_alsin_item . '%')
                       ->Where('alsin_items.status','Tersedia')
-                      ->get();
+                      ->Paginate(5);
+
+    $alsins->setPath(env('APP_URL') . '/api/upja/show_form_pricing?transaction_order_id=' .
+                     $request->transaction_order_id .'&keyword_alsin_item=' . $request->keyword_alsin_item  );
 
     $rice = transaction_order_rice::select('transaction_order_rices.*'
                                           , 'alsin_types.name as alsin_type_name')
@@ -1263,7 +1256,8 @@ class Upja_Controller extends Controller
     $user_id = $fixedtoken->id;
 
     $alsins = DB::table('alsin_items')
-                      ->select('alsin_items.id as alsin_item_id','alsin_items.vechile_code')
+                      ->select('alsin_items.id as alsin_item_id','alsin_items.vechile_code',
+                               'alsin_items.description')
                       ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                       ->Where('alsins.upja_id', $user_id )
                       ->Where('alsins.alsin_type_id', $request->alsin_type_id )
@@ -1286,6 +1280,71 @@ class Upja_Controller extends Controller
     $alsins->save();
 
     $final = array('message'=> "change password succsess");
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_spare_part_upja(Request $request)
+  {
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $spare_parts = DB::table('trasansaction_upja_spare_parts')
+                      ->select('trasansaction_upja_spare_parts.id as trasansaction_upja_spare_part_id',
+                               'spare_parts.id as spare_part_id','spare_parts.name as spare_part_name'
+                               ,'spare_part_types.name as spare_part_type_name','alsin_types.name as alsin_type_name'
+                               )
+                      ->Join ('spare_parts', 'spare_parts.id', '=', 'trasansaction_upja_spare_parts.spare_part_id')
+                      ->Join ('spare_part_types', 'spare_part_types.id', '=', 'spare_parts.spare_part_type_id')
+                      ->Join ('alsin_types', 'alsin_types.id', '=', 'spare_part_types.alsin_type_id')
+                      ->Where('trasansaction_upja_spare_parts.upja_id', $user_id )
+                      ->get();
+
+    $final = array('spare_parts'=> $spare_parts);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function insert_spare_part_upja(Request $request)
+  {
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $check_spare_part = Helper::check_spare_part($request->spare_part_id);
+    if($check_spare_part == null){
+      $final = array('message'=> "spare part not found");
+      return array('status' => 0 ,'result'=>$final);
+    }
+
+    $spare_parts = new trasansaction_upja_spare_part;
+    $spare_parts->spare_part_id = $request->spare_part_id;
+    $spare_parts->upja_id = $user_id;
+    $spare_parts->save();
+
+    $final = array('message'=> "sukses insert spare part upja");
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function delete_spare_part_upja(Request $request)
+  {
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $spare_parts = trasansaction_upja_spare_part::find($request->trasansaction_upja_spare_part_id);
+
+    if($spare_parts == null){
+      $final = array('message'=> "transaksi tidak ditemukan");
+      return array('status' => 0 ,'result'=>$final);
+    }
+    if($spare_parts->upja_id != $user_id){
+      $final = array('message'=> "upja anda tidak bisa menghapus tranksi ini");
+      return array('status' => 0 ,'result'=>$final);
+    }
+
+    $spare_parts->delete();
+
+    $final = array('message'=> "sukses delete spare part upja");
     return array('status' => 1 ,'result'=>$final);
   }
 }

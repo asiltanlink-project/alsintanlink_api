@@ -14,6 +14,7 @@ use App\Models\spare_part;
 use App\Models\training;
 use App\Models\Alsin_type;
 use Illuminate\Http\Request;
+use App\Models\spare_part_type;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Mailjet\LaravelMailjet\Facades\Mailjet;
@@ -162,4 +163,29 @@ class General_Controller extends Controller
      return array('status' => 1 ,'result'=>$final);
   }
 
+  public function show_alsin_type(Request $request ){
+
+     $rice_seed = Alsin_type::where('alsin_other',0)->get();
+
+     $final = array('alsin_types'=>$rice_seed);
+     return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_spare_part_type(Request $request ){
+
+     $rice_seed = spare_part_type::where('alsin_type_id',$request->alsin_type_id )
+                                  ->get();
+
+     $final = array('spare_part_types'=>$rice_seed);
+     return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_spare_part_search(Request $request ){
+
+     $rice_seed = spare_part::where('spare_part_type_id',$request->spare_part_type_id )
+                                  ->get();
+
+     $final = array('spare_parts'=>$rice_seed);
+     return array('status' => 1 ,'result'=>$final);
+  }
 }

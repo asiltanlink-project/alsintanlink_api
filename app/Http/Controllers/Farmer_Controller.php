@@ -177,6 +177,7 @@ class Farmer_Controller extends Controller
     $blog->province = $request->province;
     $blog->city = $request->city;
     $blog->district = $request->district;
+    $blog->village = $request->village;
     $blog->password = Hash::make($request->password);
     $blog->otp_code = rand(pow(10, $digits-1), pow(10, $digits)-1);
     $blog->save();
@@ -282,16 +283,17 @@ class Farmer_Controller extends Controller
 
   public function show_upja(Request $request ){
 
-    $check_district = Helper::check_district($request->district_id);
+    $check_district = Helper::check_village($request->village_id);
 
     if($check_district == null){
       $final = array('message'=> "district not found");
       return array('status' => 0 ,'result'=>$final);
     }
 
-    $upja = Upja::select('id','name','leader_name','village','class')
-                    ->where('district', $request->district_id )
+    $upja = Upja::select('id','name','leader_name','class')
+                    ->where('village', $request->village_id )
                     ->get();
+
     $final = array('upjas'=>$upja);
     return array('status' => 1 ,'result'=>$final);
   }
@@ -303,7 +305,7 @@ class Farmer_Controller extends Controller
       return array('status' => 0 ,'result'=>null);
     }
 
-    $upja = Upja::select('id','name','leader_name','village','class')
+    $upja = Upja::select('id','name','leader_name','class')
                     ->Where('upjas.id', $request->upja_id )
                     ->first();
 
@@ -452,6 +454,7 @@ class Farmer_Controller extends Controller
     // create order
     $transaction_order = new Transaction_order ;
     $transaction_order->farmer_id = $user_id;
+    $transaction_order->note = $request->note;
     $transaction_order->upja_id = $request->upja_id;
     $transaction_order->delivery_time = $request->delivery_time;
     $transaction_order->latitude = $request->latitude;
@@ -762,11 +765,13 @@ class Farmer_Controller extends Controller
 
       $farmer =  farmer::select('farmers.name','farmers.phone_number','indoregion_provinces.name as province',
                                 'indoregion_regencies.name as city','indoregion_districts.name as district',
-                                'indoregion_provinces.id as province_id','indoregion_regencies.id as city_id',
-                                'indoregion_districts.id as district_id')
+                                'indoregion_villages.name as village','indoregion_provinces.id as province_id',
+                                'indoregion_regencies.id as city_id','indoregion_districts.id as district_id',
+                                'indoregion_villages.id as village_id')
                               ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'farmers.province')
                               ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'farmers.city')
                               ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'farmers.district')
+                              ->Join ('indoregion_villages', 'indoregion_villages.id', '=', 'farmers.village')
                               ->where('farmers.id' , $user_id)->first() ;
 
       if($farmer == null){
@@ -775,6 +780,30 @@ class Farmer_Controller extends Controller
       }
 
       $final = array('farmer'=>$farmer);
+      return array('status' => 1 ,'result'=>$final);
+    }
+
+    public function update_user(Request $request){
+
+      $token = JWTAuth::getToken();
+      $fixedtoken = JWTAuth::setToken($token)->toUser();
+      $user_id = $fixedtoken->id;
+
+      $notif = Farmer::find($user_id);
+
+      if($notif == null){
+        $final = array('message'=> 'farmer not found');
+        return array('status' => 0 ,'result'=>$final);
+      }
+
+      $notif->name = $request->name;
+      $notif->province = $request->province;
+      $notif->city = $request->city;
+      $notif->district = $request->district;
+      $notif->village = $request->village;
+      $notif->save();
+
+      $final = array('message'=> 'update user success');
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -814,18 +843,7 @@ class Farmer_Controller extends Controller
       return array('status' => 1,'result'=>$final);
     }
 
-    public function farmer_forget_password_succsess(){
-
-      return view('email/upja_forget_password_succsess');
-    }
-
-    public function farmer_forget_form(Request $request){
-
-      $farmer = Farmer::find($request->farmer_id);
-      return view('email/farmer_forget_password_form',['farmer_id' => $request->farmer_id]);
-    }
-
-    public function change_password(Request $request)
+    public function forget_change_password(Request $request)
     {
 
       $alsins = Farmer::find($request->farmer_id);
@@ -838,6 +856,17 @@ class Farmer_Controller extends Controller
 
       $final = array('message'=> "change password succsess");
       return array('status' => 1 ,'result'=>$final);
+    }
+
+    public function farmer_forget_password_succsess(){
+
+      return view('email/upja_forget_password_succsess');
+    }
+
+    public function farmer_forget_form(Request $request){
+
+      $farmer = Farmer::find($request->farmer_id);
+      return view('email/farmer_forget_password_form',['farmer_id' => $request->farmer_id]);
     }
 
     public function show_upja_raparation(Request $request){
@@ -930,5 +959,32 @@ class Farmer_Controller extends Controller
 
       $final = array('message'=> 'delete token success');
       return array('status' => 1 ,'result'=>$final);
+    }
+
+
+    public function change_password(Request $request){
+
+      $token = JWTAuth::getToken();
+      $fixedtoken = JWTAuth::setToken($token)->toUser();
+      $user_id = $fixedtoken->id;
+
+      $notif = Farmer::find($user_id);
+      if($notif == null){
+        $final = array('message'=> 'petani tidak ditemukan');
+        return array('status' => 0 ,'result'=>$final);
+      }
+
+      if (Hash::check($request->old_password ,$notif->password )) {
+
+        $notif->password = Hash::make($request->new_password);
+        $notif->save();
+
+        $final = array('message'=> 'mengganti password berhasil');
+        return array('status' => 1 ,'result'=>$final);
+      }else{
+
+        $final = array('message'=> 'password tidak sama');
+        return array('status' => 0 ,'result'=>$final);
+      }
     }
 }

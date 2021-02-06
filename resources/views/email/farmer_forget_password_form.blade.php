@@ -224,7 +224,7 @@ function submit_reset_password( )
         farmer_id: farmer_id,
         password: new_password
      };
-    fetch('https://alsintanlink.com/api/farmer/change_password',{
+    fetch('https://alsintanlink.com/api/farmer/forget_change_password',{
                 method : 'POST',
                 headers: {
                   'Content-Type': 'application/json',
