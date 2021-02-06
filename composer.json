@@ -12,6 +12,8 @@
         "laravel/framework": "5.7.*",
         "laravel/tinker": "^1.0",
         "lcobucci/jwt": "3.3.3",
+        "mailjet/laravel-mailjet": "^2.1",
+        "mailjet/mailjet-apiv3-php": "^1.5",
         "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {

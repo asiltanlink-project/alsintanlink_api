@@ -160,6 +160,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
+        Mailjet\LaravelMailjet\MailjetServiceProvider::class,
+        Mailjet\LaravelMailjet\MailjetMailServiceProvider::class,
     ],
 
     /*
@@ -210,6 +212,7 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,     // jwt api
         'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
+        'Mailjet' => Mailjet\LaravelMailjet\Facades\Mailjet::class, // mailjet
     ],
 
 ];

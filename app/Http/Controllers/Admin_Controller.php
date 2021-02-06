@@ -5,13 +5,23 @@ namespace App\Http\Controllers;
 use Hash;
 use Config;
 use JWTAuth;
+use Carbon\Carbon;
 use App\Models\Upja;
 use App\Models\Admin;
 use App\Models\Farmer;
+use App\Mail\Upja_Alert;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use App\Helpers\LogActivity as Helper;
 use Tymon\JWTAuth\Exceptions\JWTException;
+
+use App\Models\Other_Service\transaction_order_rmu;
+use App\Models\Other_Service\transaction_order_rice;
+use App\Models\Other_Service\transaction_order_training;
+use App\Models\Other_Service\transaction_order_reparation;
+use App\Models\Other_Service\transaction_order_rice_seed;
+use App\Models\Other_Service\transaction_order_spare_part;
 
 class Admin_Controller extends Controller
 {
@@ -69,24 +79,36 @@ class Admin_Controller extends Controller
 
   public function show_upja(Request $request ){
 
-    $check_district = Helper::check_district($request->district);
+    $check_district = Helper::check_district($request->district_id);
 
     if($check_district == null){
       $final = array('message'=> "district not found");
       return array('status' => 0 ,'result'=>$final);
     }
 
-    $upja = Upja::select('id as upja_id','name as upja_name','leader_name','village','class')
-                    ->where('district', $request->district )
+    $upja = Upja::select('id as upja_id','name as upja_name','leader_name','village','class'
+                        )
+                    ->where('district', $request->district_id )
                     ->get();
+
     $final = array('upjas'=>$upja);
     return array('status' => 1 ,'result'=>$final);
   }
 
   public function show_detail_upja(Request $request ){
 
-    $upja = Upja::select('id as upja_id','name as upja_name','leader_name','village','class')
-                    ->where('id', $request->upja_id )
+    $upja = Upja::select('upjas.id as upja_id','upjas.name as upja_name','leader_name','village','class','legality',
+                          'indoregion_provinces.name as province','indoregion_regencies.name as city',
+                          'indoregion_districts.name as district',
+                          DB::raw("(CASE WHEN upjas.class = 0 THEN 'Pemula'
+                                    WHEN upjas.class = 1 THEN 'Berkembang'
+                                    WHEN upjas.class = 2 THEN 'Profesional'
+                                    ELSE 'Pemula' END) as class")
+                            )
+                    ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'upjas.province')
+                    ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'upjas.city')
+                    ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'upjas.district')
+                    ->where('upjas.id', $request->upja_id )
                     ->first();
 
     if($upja == null){
@@ -98,17 +120,17 @@ class Admin_Controller extends Controller
                        ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                        ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
                        ->select('alsins.id as alsin_id','alsin_types.id as alsin_type_id','alsin_types.name as alsin_type_name'
-                                ,'alsins.cost','alsins.picture'
+                                ,'alsins.cost','alsin_types.picture_detail'
                                 ,DB::raw("(select count(alsin_items.id)
                                         FROM alsin_items
                                         WHERE (alsin_items.alsin_id = alsins.id)
-                                        AND (alsin_items.status = 0)
+                                        AND (alsin_items.status = 'Tersedia')
                                       ) as available
                                    ")
                                    ,DB::raw("(select count(alsin_items.id)
                                            FROM alsin_items
                                            WHERE (alsin_items.alsin_id = alsins.id)
-                                           AND (alsin_items.status = 1)
+                                           AND (alsin_items.status = 'Sedang Digunakan')
                                          ) as not_available
                                       ")
                                       ,DB::raw("(select (available + not_available)
@@ -117,25 +139,21 @@ class Admin_Controller extends Controller
                                    )
                       ->Where('upjas.id', $request->upja_id )
                       ->groupBy('alsins.id','alsin_types.id','alsin_types.name'
-                                ,'alsins.cost','alsins.picture')
+                                ,'alsins.cost','alsin_types.picture_detail')
                       ->get();
 
   $transactions = DB::table('transaction_orders')
                      ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
-                              , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                              , 'transaction_orders.payment_yn', 'farmers.id as farmer_id', 'farmers.name as farmer_name'
+                              , 'transaction_orders.total_cost', 'transaction_orders.status'
+                              , 'farmers.id as farmer_id', 'farmers.name as farmer_name'
                               ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
                               ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
                               )
-                    ->Join ('transaction_order_children', 'transaction_order_children.transaction_order_id',
-                            '=', 'transaction_orders.id')
-                    ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
-                    ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                     ->Join ('farmers', 'farmers.id', '=', 'transaction_orders.farmer_id')
-                    ->Where('alsins.upja_id',  $request->upja_id )
+                    ->Where('transaction_orders.upja_id',  $request->upja_id )
                     ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
-                             , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                             , 'transaction_orders.payment_yn', 'transaction_orders.delivery_time'
+                             , 'transaction_orders.total_cost', 'transaction_orders.status'
+                             , 'transaction_orders.delivery_time'
                              , 'transaction_orders.created_at', 'farmers.id', 'farmers.name')
                     ->get();
 
@@ -145,7 +163,7 @@ class Admin_Controller extends Controller
 
   public function show_farmer(Request $request ){
 
-    $check_district = Helper::check_district($request->district);
+    $check_district = Helper::check_district($request->district_id);
 
     if($check_district == null){
       $final = array('message'=> "district not found");
@@ -153,7 +171,7 @@ class Admin_Controller extends Controller
     }
 
     $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
-                    ->where('district', $request->district )
+                    ->where('district', $request->district_id )
                     ->get();
 
     $final = array('farmers'=>$farmers);
@@ -162,9 +180,13 @@ class Admin_Controller extends Controller
 
   public function show_detail_farmer(Request $request ){
 
-    $farmer = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify'
-                            ,'province','city','district')
-                    ->where('id', $request->farmer_id )
+    $farmer = Farmer::select('farmers.id as farmer_id','farmers.name as farmer_name','phone_number','phone_verify',
+                            'indoregion_provinces.name as province','indoregion_regencies.name as city',
+                            'indoregion_districts.name as district')
+                    ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'farmers.province')
+                    ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'farmers.city')
+                    ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'farmers.district')
+                    ->where('farmers.id', $request->farmer_id )
                     ->first();
 
     if($farmer == null){
@@ -174,20 +196,16 @@ class Admin_Controller extends Controller
 
     $transactions = DB::table('transaction_orders')
                        ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
-                                , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                                , 'transaction_orders.payment_yn', 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                , 'transaction_orders.total_cost', 'transaction_orders.status'
+                                , 'upjas.id as upja_id', 'upjas.name as upja_name'
                                 ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
                                 ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
                                 )
-                      ->Join ('transaction_order_children', 'transaction_order_children.transaction_order_id',
-                              '=', 'transaction_orders.id')
-                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
-                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
-                      ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                      ->Join ('upjas', 'upjas.id', '=', 'transaction_orders.upja_id')
                       ->Where('transaction_orders.farmer_id',  $request->farmer_id )
                       ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
-                               , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                               , 'transaction_orders.payment_yn', 'transaction_orders.delivery_time'
+                               , 'transaction_orders.total_cost', 'transaction_orders.status'
+                               , 'transaction_orders.delivery_time'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
                       ->get();
 
@@ -202,17 +220,17 @@ class Admin_Controller extends Controller
                        ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                        ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
                        ->select('alsins.id as alsin_id','alsin_types.id as alsin_type_id'
-                                ,'alsin_types.name as alsin_type_name','alsins.cost','alsins.picture'
+                                ,'alsin_types.name as alsin_type_name','alsins.cost','alsin_types.picture_detail'
                                 ,DB::raw("(select count(alsin_items.id)
                                         FROM alsin_items
                                         WHERE (alsin_items.alsin_id = alsins.id)
-                                        AND (alsin_items.status = 0)
+                                        AND (alsin_items.status = 'Tersedia')
                                       ) as available
                                    ")
                                    ,DB::raw("(select count(alsin_items.id)
                                            FROM alsin_items
                                            WHERE (alsin_items.alsin_id = alsins.id)
-                                           AND (alsin_items.status = 1)
+                                           AND (alsin_items.status = 'Sedang Digunakan')
                                          ) as not_available
                                       ")
                                       ,DB::raw("(select (available + not_available)
@@ -222,7 +240,7 @@ class Admin_Controller extends Controller
                       ->Where('upjas.id', $request->upja_id )
                       ->Where('alsin_types.id', $request->alsin_type_id )
                       ->groupBy('alsins.id','alsin_types.id','alsin_types.name'
-                                ,'alsins.cost','alsins.picture')
+                                ,'alsins.cost','alsin_types.picture_detail')
                       ->first();
 
     if($alsin == null){
@@ -261,22 +279,24 @@ class Admin_Controller extends Controller
 
     $transactions = DB::table('transaction_orders')
                        ->select('transaction_orders.id', 'transaction_orders.transport_cost'
-                                , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                                , 'transaction_orders.payment_yn', 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                , 'transaction_orders.total_cost', 'transaction_orders.status'
+                                , 'upjas.id as upja_id', 'upjas.name as upja_name'
                                 , 'farmers.id as farmer_id', 'farmers.name as farmer_name'
                                 ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
                                 ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
                                 )
-                      ->Join ('transaction_order_children', 'transaction_order_children.transaction_order_id',
+                      ->Join ('transaction_order_types', 'transaction_order_types.transaction_order_id',
                               '=', 'transaction_orders.id')
+                      ->Join ('transaction_order_children', 'transaction_order_children.transaction_order_type_id',
+                              '=', 'transaction_order_types.id')
                       ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
                       ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                       ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
                       ->Join ('farmers', 'farmers.id', '=', 'transaction_orders.farmer_id')
                       ->Where('transaction_order_children.alsin_item_id',  $request->alsin_item_id )
                       ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
-                               , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                               , 'transaction_orders.payment_yn', 'transaction_orders.delivery_time'
+                               , 'transaction_orders.total_cost', 'transaction_orders.status'
+                               , 'transaction_orders.delivery_time'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name'
                                , 'farmers.id', 'farmers.name')
                       ->get();
@@ -288,21 +308,21 @@ class Admin_Controller extends Controller
 
     $transaction = DB::table('transaction_orders')
                        ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
-                                  , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                                  , 'transaction_orders.payment_yn', 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                  , 'transaction_orders.total_cost', 'transaction_orders.status'
+                                  , 'transaction_orders.latitude', 'transaction_orders.longtitude'
+                                  , 'transaction_orders.full_adress'
+                                  , 'upjas.id as upja_id', 'upjas.name as upja_name'
                                   ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
                                   ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
                                 )
-                      ->Join ('transaction_order_children', 'transaction_order_children.transaction_order_id',
-                              '=', 'transaction_orders.id')
-                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
-                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
-                      ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                      ->Join ('upjas', 'upjas.id', '=', 'transaction_orders.upja_id')
                       ->Where('transaction_orders.id',  $request->transaction_order_id )
                       ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
-                               , 'transaction_orders.total_cost', 'transaction_orders.payment_yn'
-                               , 'transaction_orders.payment_yn', 'transaction_orders.delivery_time'
-                               , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
+                               , 'transaction_orders.total_cost', 'transaction_orders.status'
+                               , 'transaction_orders.delivery_time'
+                               , 'transaction_orders.created_at', 'upjas.id', 'upjas.name'
+                               , 'transaction_orders.latitude', 'transaction_orders.longtitude'
+                               , 'transaction_orders.full_adress')
                       ->first();
 
     if($transaction == null){
@@ -310,49 +330,456 @@ class Admin_Controller extends Controller
       return array('status' => 0 ,'result'=>$final);
     }
 
-    $alsins = DB::table('transaction_order_children')
-                       ->select('alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name'
-                                  , DB::raw('count(transaction_order_children.id) as total_alsin')
+    $alsins = DB::table('transaction_order_types')
+                       ->select('transaction_order_types.id as transaction_order_type_id',
+                                'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
+                                'transaction_order_types.alsin_item_total', 'alsin_types.alsin_other'
                                 )
-                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
-                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
-                      ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
-                      ->Where('transaction_order_children.transaction_order_id',  $request->transaction_order_id )
-                      ->groupby('alsin_types.id', 'alsin_types.name')
+                      ->Join ('alsin_types', 'alsin_types.id', '=', 'transaction_order_types.alsin_type_id')
+                      ->Where('transaction_order_types.transaction_order_id',  $request->transaction_order_id )
                       ->get();
 
-    $final = array('transaction'=>$transaction, 'alsins'=>$alsins);
+    $rice = transaction_order_rice::select('transaction_order_rices.id as transaction_order_type_id',
+                                              'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
+                                              DB::raw("(select null) as alsin_item_total"), 'alsin_types.alsin_other'
+                                                 )
+                                      ->where('transaction_order_rices.transaction_order_id',
+                                            $request->transaction_order_id)
+                                      ->Join ('alsin_types', 'alsin_types.id', '=',
+                                              'transaction_order_rices.alsin_type_id')
+                                      ->limit(1)
+                                      ->get();
+
+    $rice_seed = transaction_order_rice_seed::select('transaction_order_rice_seeds.id as transaction_order_type_id',
+                                                      'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
+                                                      DB::raw("(select null) as alsin_item_total"), 'alsin_types.alsin_other'
+                                                 )
+                                      ->Join ('rice_seeds', 'rice_seeds.id', '=',
+                                              'transaction_order_rice_seeds.rice_seed_id')
+                                      ->Join ('alsin_types', 'alsin_types.id', '=',
+                                              'transaction_order_rice_seeds.alsin_type_id')
+                                      ->where('transaction_order_id',
+                                            $request->transaction_order_id)
+                                      ->limit(1)
+                                      ->get();
+
+
+    $rmu = transaction_order_rmu::select('transaction_order_rmus.id as transaction_order_type_id',
+                                                      'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
+                                                      DB::raw("(select null) as alsin_item_total"), 'alsin_types.alsin_other'
+                                                 )
+                                     ->where('transaction_order_id',
+                                            $request->transaction_order_id)
+                                     ->Join ('alsin_types', 'alsin_types.id', '=',
+                                            'transaction_order_rmus.alsin_type_id')
+                                     ->limit(1)
+                                     ->get();
+
+
+
+    $reparation = transaction_order_reparation::
+                                    select('transaction_order_reparations.id as transaction_order_type_id',
+                                                      'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
+                                                      DB::raw("(select null) as alsin_item_total"), 'alsin_types.alsin_other'
+                                                 )
+                                      ->Join ('alsin_types', 'alsin_types.id', '=',
+                                              'transaction_order_reparations.alsin_type_order_id')
+                                      ->where('transaction_order_id',
+                                            $request->transaction_order_id)
+                                      ->limit(1)
+                                      ->get();
+
+    $training = transaction_order_training::
+                                    select('transaction_order_trainings.id as transaction_order_type_id',
+                                                      'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
+                                                      DB::raw("(select null) as alsin_item_total"), 'alsin_types.alsin_other'
+                                                 )
+                                    ->Join ('trainings', 'trainings.id', '=',
+                                            'transaction_order_trainings.training_id')
+                                    ->Join ('alsin_types', 'alsin_types.id', '=',
+                                            'transaction_order_trainings.alsin_type_id')
+                                    ->where('transaction_order_id',
+                                            $request->transaction_order_id)
+                                    ->limit(1)
+                                    ->get();
+
+
+    $spare_part = transaction_order_spare_part::
+                                      select('transaction_order_spare_parts.id as transaction_order_type_id',
+                                                        'alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name',
+                                                        DB::raw("(select null) as alsin_item_total"), 'alsin_types.alsin_other'
+                                                   )
+                                      ->Join ('spare_parts', 'spare_parts.id', '=',
+                                              'transaction_order_spare_parts.spare_part_id')
+                                      ->Join ('alsin_types', 'alsin_types.id', '=',
+                                              'transaction_order_spare_parts.alsin_type_id')
+                                      ->where('transaction_order_id',
+                                            $request->transaction_order_id)
+                                      ->limit(1)
+                                      ->get();
+
+    $final_alsin = $alsins->merge($rice)->merge($rice_seed)->merge($rmu)
+                  ->merge($reparation)->merge($training)->merge($spare_part);
+
+    $final = array('transaction'=>$transaction, 'alsins'=>$final_alsin);
     return array('status' => 1 ,'result'=>$final);
   }
 
   public function show_detail_transaction_alsin(Request $request ){
 
-    $check_alsin_type = Helper::check_alsin_type($request->alsin_type_id);
+    if($request->alsin_other == 0){
 
-    if($check_alsin_type == null){
-      $final = array('message' => 'alsin type tidak ditemukan');
-      return array('status' => 0 ,'result'=> 'alsin type tidak ditemukan');
+      $alsins = DB::table('transaction_order_children')
+                         ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code'
+                                  , 'alsin_items.status', 'transaction_order_types.cost'
+                                  )
+                        ->Join ('transaction_order_types', 'transaction_order_types.id', '=',
+                                'transaction_order_children.transaction_order_type_id')
+                        ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
+                        ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                        ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                        ->Where('transaction_order_children.transaction_order_type_id',  $request->transaction_order_type_id )
+                        ->get();
+
+      $final = array('alsin_items'=>$alsins);
+      return array('status' => 1 ,'result'=>$final);
+    }else if($request->alsin_other == 1){
+
+      switch($request->alsin_type_id){
+        case 8:
+          $alsins =  transaction_order_rmu::select('transaction_order_rmus.*',
+                                                      'alsin_types.name as alsin_type_name',
+                                                      'alsin_types.picture_detail as alsins_picture', 'alsin_types.alsin_other')
+                                            ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                    'transaction_order_rmus.alsin_type_id')
+                                            ->where('transaction_order_rmus.id',
+                                                  $request->transaction_order_type_id)
+                                            ->get();
+            break;
+        case 9:
+          $alsins = transaction_order_rice_seed::select('transaction_order_rice_seeds.*'
+                                                    , 'rice_seeds.name',
+                                                      'alsin_types.name as alsin_type_name',
+                                                      'alsin_types.picture_detail as alsins_picture', 'alsin_types.alsin_other')
+                                            ->Join ('rice_seeds', 'rice_seeds.id', '=',
+                                                    'transaction_order_rice_seeds.rice_seed_id')
+                                            ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                    'transaction_order_rice_seeds.alsin_type_id')
+                                            ->where('transaction_order_rice_seeds.id',
+                                                  $request->transaction_order_type_id)
+                                            ->get();
+            break;
+        case 10:
+          $alsins = transaction_order_rice::select('transaction_order_rices.*',
+                                                  'alsin_types.name as alsin_type_name',
+                                                  'alsin_types.picture_detail as alsins_picture', 'alsin_types.alsin_other')
+                                            ->Join ('alsin_types', 'alsin_types.id', '=', 'transaction_order_rices.alsin_type_id')
+                                            ->where('transaction_order_rices.id',
+                                                  $request->transaction_order_type_id)
+                                            ->get();
+            break;
+        case 11:
+          $alsins = transaction_order_reparation::
+                                              select('transaction_order_reparations.id','transaction_order_reparations.transaction_order_id',
+                                                    'transaction_order_reparations.cost',
+                                                    'transaction_order_reparations.alsin_type_id as alsins_order_id',
+                                                    'transaction_order_reparations.alsin_type_order_id as alsin_type_id'
+                                                    , 'alsin_type_order.name as alsin_type_order_name'
+                                                    , 'alsin_type_order.picture_detail as alsins_order_picture'
+                                                    , 'alsin_type_source.name as alsin_type_name'
+                                                    , 'alsin_type_source.picture_detail as alsins_picture'
+                                                    , 'alsin_type_source.alsin_other')
+                                            ->Join ('alsin_types as alsin_type_order', 'alsin_type_order.id', '=',
+                                                    'transaction_order_reparations.alsin_type_id')
+                                            ->Join ('alsin_types as alsin_type_source', 'alsin_type_source.id', '=',
+                                                    'transaction_order_reparations.alsin_type_order_id')
+                                            ->where('transaction_order_reparations.id',
+                                                  $request->transaction_order_type_id)
+                                            ->get();
+            break;
+        case 12:
+          $alsins = transaction_order_spare_part::
+                                              select('transaction_order_spare_parts.*'
+                                                    , 'spare_parts.name',
+                                                    'alsin_types.name as alsin_type_name',
+                                                    'alsin_types.picture_detail as alsins_picture'
+                                                    , 'alsin_types.alsin_other')
+                                            ->Join ('spare_parts', 'spare_parts.id', '=',
+                                                    'transaction_order_spare_parts.spare_part_id')
+                                            ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                    'transaction_order_spare_parts.alsin_type_id')
+                                            ->where('transaction_order_spare_parts.id',
+                                                  $request->transaction_order_type_id)
+                                            ->get();
+            break;
+        case 13:
+          $alsins = transaction_order_training::
+                                            select('transaction_order_trainings.*'
+                                                  , 'trainings.name',
+                                                  'alsin_types.name as alsin_type_name',
+                                                  'alsin_types.picture_detail as alsins_picture'
+                                                  , 'alsin_types.alsin_other')
+                                          ->Join ('trainings', 'trainings.id', '=',
+                                                  'transaction_order_trainings.training_id')
+                                          ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                  'transaction_order_trainings.alsin_type_id')
+                                          ->where('transaction_order_trainings.id',
+                                                  $request->transaction_order_type_id)
+                                            ->get();
+            break;
+        default:
+        $final = array('message'=> 'alsin type not found');
+        return array('status' => 0 ,'result'=>$final);
+        break;
+      }
+
+      $final = array('alsin_items'=>$alsins);
+      return array('status' => 1 ,'result'=>$final);
     }
 
-    $check_order = Helper::check_order($request->transaction_order_id);
+  }
 
-    if($check_order == null){
-      $final = array('message' => 'transaction type tidak ditemukan');
-      return array('status' => 0 ,'result'=> 'transaction type tidak ditemukan');
+  public function show_detail_transaction_other_service(Request $request ){
+
+    switch($request->alsin_type_id){
+      case 8:
+        $alsins =  transaction_order_rmu::select('transaction_order_rmus.*',
+                                                    'alsin_types.name as alsin_type_name',
+                                                    'alsin_types.picture_detail as alsins_picture', 'alsin_types.alsin_other')
+                                          ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                  'transaction_order_rmus.alsin_type_id')
+                                          ->where('transaction_order_rmus.id',
+                                                $request->transaction_order_type_id)
+                                          ->get();
+          break;
+      case 9:
+        $alsins = transaction_order_rice_seed::select('transaction_order_rice_seeds.*'
+                                                  , 'rice_seeds.name',
+                                                    'alsin_types.name as alsin_type_name',
+                                                    'alsin_types.picture_detail as alsins_picture', 'alsin_types.alsin_other')
+                                          ->Join ('rice_seeds', 'rice_seeds.id', '=',
+                                                  'transaction_order_rice_seeds.rice_seed_id')
+                                          ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                  'transaction_order_rice_seeds.alsin_type_id')
+                                          ->where('transaction_order_rice_seeds.id',
+                                                $request->transaction_order_type_id)
+                                          ->get();
+          break;
+      case 10:
+        $alsins = transaction_order_rice::select('transaction_order_rices.*',
+                                                'alsin_types.name as alsin_type_name',
+                                                'alsin_types.picture_detail as alsins_picture', 'alsin_types.alsin_other')
+                                          ->Join ('alsin_types', 'alsin_types.id', '=', 'transaction_order_rices.alsin_type_id')
+                                          ->where('transaction_order_rices.id',
+                                                $request->transaction_order_type_id)
+                                          ->get();
+          break;
+      case 11:
+        $alsins = transaction_order_reparation::
+                                            select('transaction_order_reparations.id','transaction_order_reparations.transaction_order_id',
+                                                  'transaction_order_reparations.cost',
+                                                  'transaction_order_reparations.alsin_type_id as alsins_order_id',
+                                                  'transaction_order_reparations.alsin_type_order_id as alsin_type_id'
+                                                  , 'alsin_type_order.name as alsin_type_order_name'
+                                                  , 'alsin_type_order.picture_detail as alsins_order_picture'
+                                                  , 'alsin_type_source.name as alsin_type_name'
+                                                  , 'alsin_type_source.picture_detail as alsins_picture'
+                                                  , 'alsin_type_source.alsin_other')
+                                          ->Join ('alsin_types as alsin_type_order', 'alsin_type_order.id', '=',
+                                                  'transaction_order_reparations.alsin_type_id')
+                                          ->Join ('alsin_types as alsin_type_source', 'alsin_type_source.id', '=',
+                                                  'transaction_order_reparations.alsin_type_order_id')
+                                          ->where('transaction_order_reparations.id',
+                                                $request->transaction_order_type_id)
+                                          ->get();
+          break;
+      case 12:
+        $alsins = transaction_order_spare_part::
+                                            select('transaction_order_spare_parts.*'
+                                                  , 'spare_parts.name',
+                                                  'alsin_types.name as alsin_type_name',
+                                                  'alsin_types.picture_detail as alsins_picture'
+                                                  , 'alsin_types.alsin_other')
+                                          ->Join ('spare_parts', 'spare_parts.id', '=',
+                                                  'transaction_order_spare_parts.spare_part_id')
+                                          ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                  'transaction_order_spare_parts.alsin_type_id')
+                                          ->where('transaction_order_spare_parts.id',
+                                                $request->transaction_order_type_id)
+                                          ->get();
+          break;
+      case 13:
+        $alsins = transaction_order_training::
+                                          select('transaction_order_trainings.*'
+                                                , 'trainings.name',
+                                                'alsin_types.name as alsin_type_name',
+                                                'alsin_types.picture_detail as alsins_picture'
+                                                , 'alsin_types.alsin_other')
+                                        ->Join ('trainings', 'trainings.id', '=',
+                                                'transaction_order_trainings.training_id')
+                                        ->Join ('alsin_types', 'alsin_types.id', '=',
+                                                'transaction_order_trainings.alsin_type_id')
+                                        ->where('transaction_order_trainings.id',
+                                                $request->transaction_order_type_id)
+                                          ->get();
+          break;
+      default:
+      $final = array('message'=> 'alsin type not found');
+      return array('status' => 0 ,'result'=>$final);
+      break;
     }
-
-    $alsins = DB::table('transaction_order_children')
-                       ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code'
-                                , 'alsin_items.status', 'transaction_order_children.cost'
-                                )
-                      ->Join ('alsin_items', 'alsin_items.id', '=', 'transaction_order_children.alsin_item_id')
-                      ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
-                      ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
-                      ->Where('transaction_order_children.transaction_order_id',  $request->transaction_order_id )
-                      ->Where('alsin_types.id',  $request->alsin_type_id )
-                      ->get();
 
     $final = array('alsin_items'=>$alsins);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_all_upja_traction(Request $request ){
+
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
+
+    $limit_date = Carbon::now()->subDays(14)->format('Y-m-d');
+
+    $transactions_all = DB::table('upjas')
+                       ->select('upjas.id as upja_id','upjas.name as upja_name','upjas.email','upjas.leader_name',
+                               'upjas.village','upjas.class','upjas.legality','indoregion_provinces.name as province',
+                               'indoregion_regencies.name as city','indoregion_districts.name as district',
+                                 DB::raw("(select count(transaction_orders.created_at)
+                                         FROM transaction_orders
+                                         WHERE (transaction_orders.upja_id = upjas.id)
+                                         AND (transaction_orders.status != 'Menunggu Penentuan Pembayaran')
+                                         AND (transaction_orders.status != 'Menunggu Konfirmasi Petani')
+                                         AND (transaction_orders.status != 'Transaksi ditolak Upja')
+                                         AND (transaction_orders.status != 'Petani Menolak Harga')
+                                         AND (transaction_orders.status != 'Menungggu Konfirmasi Upja')
+                                         AND (transaction_orders.created_at <= '$limit_date')
+                                       ) as total_transaction
+                                    ")
+                                )
+                      ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'upjas.province')
+                      ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'upjas.city')
+                      ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'upjas.district')
+                      ->leftJoin ('transaction_orders', 'transaction_orders.upja_id', '=', 'upjas.id')
+                      ->groupby('upjas.id','upjas.name','upjas.leader_name','upjas.village','upjas.class',
+                              'upjas.legality','indoregion_provinces.name','indoregion_regencies.name',
+                              'indoregion_districts.name','upjas.email')
+                      ->orderBy('upjas.name','asc')
+                      ->orderBy('upjas.id','asc')
+                      ->orderByRaw('total_transaction','asc')
+                      ->Where('upjas.province',  $request->provinces )
+                      ->get();
+
+
+    $final = array('transactions_all'=>$transactions_all);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function send_upja_alert(Request $request ){
+
+    $limit_date = Carbon::now()->subDays(14)->format('Y-m-d');
+
+    $transactions = Upja::
+                       select('upjas.id as upja_id','upjas.name as upja_name','upjas.email','upjas.leader_name',
+                               'upjas.village','upjas.class','upjas.legality','indoregion_provinces.name as province',
+                               'indoregion_regencies.name as city','indoregion_districts.name as district',
+                                 DB::raw("(select count(transaction_orders.created_at)
+                                         FROM transaction_orders
+                                         WHERE (transaction_orders.upja_id = upjas.id)
+                                         AND (transaction_orders.status != 'Menunggu Penentuan Pembayaran')
+                                         AND (transaction_orders.status != 'Menunggu Konfirmasi Petani')
+                                         AND (transaction_orders.status != 'Transaksi ditolak Upja')
+                                         AND (transaction_orders.status != 'Petani Menolak Harga')
+                                         AND (transaction_orders.status != 'Menungggu Konfirmasi Upja')
+                                         AND (transaction_orders.created_at <= '$limit_date')
+                                       ) as total_transaction
+                                    ")
+                                )
+                      ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'upjas.province')
+                      ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'upjas.city')
+                      ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'upjas.district')
+                      ->leftJoin ('transaction_orders', 'transaction_orders.upja_id', '=', 'upjas.id')
+                      ->groupby('upjas.id','upjas.name','upjas.leader_name','upjas.village','upjas.class',
+                              'upjas.legality','indoregion_provinces.name','indoregion_regencies.name',
+                              'indoregion_districts.name','upjas.email')
+                      ->orderBy('upjas.name','asc')
+                      ->orderBy('upjas.id','asc')
+                      // ->orderByRaw('total_transaction','asc')
+                      ->where('upjas.id','1')
+                      ->orwhere('upjas.id','3')
+                      ->get();
+
+    for($i=0 ; $i < sizeof($transactions); $i++ ){
+
+      if(filter_var($transactions[$i]->email, FILTER_VALIDATE_EMAIL)){
+          //send email
+          Mail::to($transactions[$i]->email)->send(new Upja_Alert($transactions[$i]));
+
+      }else  if(preg_match('/^[0-9]{3,15}+$/',$transactions[$i]->email)){
+
+          $userkey = 'd27a72ddaf0b';
+          $passkey = '4ba83675fd17f25c721dbb6d';
+          $telepon = $transactions[$i]->email;
+          $message = 'Peringatan! Upja anda tidak pernah melakukan transaksi! Mohon untuk segera melakukan transaksi!';
+          $url = 'https://console.zenziva.net/reguler/api/sendsms/';
+          $curlHandle = curl_init();
+          curl_setopt($curlHandle, CURLOPT_URL, $url);
+          curl_setopt($curlHandle, CURLOPT_HEADER, 0);
+          curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+          curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
+          curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+          curl_setopt($curlHandle, CURLOPT_TIMEOUT,30);
+          curl_setopt($curlHandle, CURLOPT_POST, 1);
+          curl_setopt($curlHandle, CURLOPT_POSTFIELDS, array(
+              'userkey' => $userkey,
+              'passkey' => $passkey,
+              'to' => $telepon,
+              'message' => $message
+          ));
+          $results = json_decode(curl_exec($curlHandle), true);
+          curl_close($curlHandle);
+      }
+    }
+
+    $final = array('message'=> 'send upja alert succsess');
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_all_transaction(Request $request ){
+
+    if($request->status == "" ){
+      $transactions = DB::table('transaction_orders')
+                         ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
+                                  , 'transaction_orders.total_cost', 'transaction_orders.status'
+                                  , 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                  ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
+                                  ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
+                                  )
+                        ->Join ('upjas', 'upjas.id', '=', 'transaction_orders.upja_id')
+                        ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
+                                 , 'transaction_orders.total_cost', 'transaction_orders.status'
+                                 , 'transaction_orders.delivery_time'
+                                 , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
+                        ->get();
+    }else{
+      $transactions = DB::table('transaction_orders')
+                         ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
+                                  , 'transaction_orders.total_cost', 'transaction_orders.status'
+                                  , 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                  ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
+                                  ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
+                                  )
+                        ->Join ('upjas', 'upjas.id', '=', 'transaction_orders.upja_id')
+                        ->Where('transaction_orders.status',  $request->status )
+                        ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
+                                 , 'transaction_orders.total_cost', 'transaction_orders.status'
+                                 , 'transaction_orders.delivery_time'
+                                 , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
+                        ->get();
+    }
+
+    $transaction = array('meta'=>sizeof($transactions), 'transactions'=>$transactions);
+    $final = array('transactions'=>$transaction);
     return array('status' => 1 ,'result'=>$final);
   }
 }
