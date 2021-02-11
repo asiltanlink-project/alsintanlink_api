@@ -139,9 +139,9 @@ class General_Controller extends Controller
 
   public function show_spare_part(Request $request ){
 
-     $spare_part = spare_part::select('spare_parts.*','alsin_types.name')
-                          ->Join('alsin_types', 'alsin_types.id', '=', 'spare_parts.alsin_type_id')
-                          ->get();
+      $spare_part = spare_part::select('spare_parts.*','alsin_types.name')
+                           ->Join('alsin_types', 'alsin_types.id', '=', 'spare_parts.alsin_type_id')
+                           ->get();
 
      $final = array('spare_parts'=>$spare_part);
      return array('status' => 1 ,'result'=>$final);
@@ -182,8 +182,14 @@ class General_Controller extends Controller
 
   public function show_spare_part_search(Request $request ){
 
-     $rice_seed = spare_part::where('spare_part_type_id',$request->spare_part_type_id )
-                                  ->get();
+      if($request->key_search == null){
+        $rice_seed = spare_part::where('spare_part_type_id',$request->spare_part_type_id )
+                                     ->get();
+      }else{
+        $rice_seed = spare_part::where('spare_part_type_id',$request->spare_part_type_id )
+                                 ->where('name', 'like', '%' . $request->key_search . '%')
+                                 ->get();
+      }
 
      $final = array('spare_parts'=>$rice_seed);
      return array('status' => 1 ,'result'=>$final);

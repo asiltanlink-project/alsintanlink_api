@@ -11,8 +11,12 @@ use App\Models\Admin;
 use App\Models\Farmer;
 use App\Mail\Upja_Alert;
 use Illuminate\Http\Request;
+use App\Models\spare_part;
+use App\Models\spare_part_type;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Mail;
+use App\Models\Excel\spare_part_Excel;
 use App\Helpers\LogActivity as Helper;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -79,7 +83,7 @@ class Admin_Controller extends Controller
 
   public function show_upja(Request $request ){
 
-    $check_district = Helper::check_district($request->district_id);
+    $check_district = Helper::check_village($request->village_id);
 
     if($check_district == null){
       $final = array('message'=> "district not found");
@@ -88,7 +92,7 @@ class Admin_Controller extends Controller
 
     $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
                         )
-                    ->where('district', $request->district_id )
+                    ->where('village', $request->village_id )
                     ->get();
 
     $final = array('upjas'=>$upja);
@@ -99,7 +103,7 @@ class Admin_Controller extends Controller
 
     $upja = Upja::select('upjas.id as upja_id','upjas.name as upja_name','leader_name','class','legality',
                           'indoregion_provinces.name as province','indoregion_regencies.name as city',
-                          'indoregion_districts.name as district',
+                          'indoregion_districts.name as district','indoregion_villages.name as village',
                           DB::raw("(CASE WHEN upjas.class = 0 THEN 'Pemula'
                                     WHEN upjas.class = 1 THEN 'Berkembang'
                                     WHEN upjas.class = 2 THEN 'Profesional'
@@ -108,6 +112,7 @@ class Admin_Controller extends Controller
                     ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'upjas.province')
                     ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'upjas.city')
                     ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'upjas.district')
+                    ->Join ('indoregion_villages', 'indoregion_villages.id', '=', 'upjas.village')
                     ->where('upjas.id', $request->upja_id )
                     ->first();
 
@@ -186,15 +191,15 @@ class Admin_Controller extends Controller
 
   public function show_farmer(Request $request ){
 
-    $check_district = Helper::check_district($request->district_id);
+    $check_district = Helper::check_village($request->village_id);
 
     if($check_district == null){
-      $final = array('message'=> "district not found");
+      $final = array('message'=> "village not found");
       return array('status' => 0 ,'result'=>$final);
     }
 
     $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
-                    ->where('district', $request->district_id )
+                    ->where('village', $request->village_id )
                     ->get();
 
     $final = array('farmers'=>$farmers);
@@ -205,10 +210,11 @@ class Admin_Controller extends Controller
 
     $farmer = Farmer::select('farmers.id as farmer_id','farmers.name as farmer_name','phone_number','phone_verify',
                             'indoregion_provinces.name as province','indoregion_regencies.name as city',
-                            'indoregion_districts.name as district')
+                            'indoregion_districts.name as district','indoregion_villages.name as village')
                     ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'farmers.province')
                     ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'farmers.city')
                     ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'farmers.district')
+                    ->Join ('indoregion_villages', 'indoregion_villages.id', '=', 'farmers.village')
                     ->where('farmers.id', $request->farmer_id )
                     ->first();
 
@@ -274,7 +280,7 @@ class Admin_Controller extends Controller
                         ->first();
 
       if($alsin == null){
-        $final = array('message'=> 'upja tidak ditemukan');
+        $final = array('message'=> 'alsin tidak dimiliki upja');
         return array('status' => 0 ,'result'=>$final);
       }
       $alsin_items = DB::table('alsin_items')
@@ -284,36 +290,39 @@ class Admin_Controller extends Controller
                         ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                         ->Where('alsin_items.alsin_id',  $alsin->alsin_id )
                         ->get();
+      $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items);
+      return array('status' => 1 ,'result'=>$final);
+    }else if($request->alsin_type_id == 9){
 
-    }else if($request->alsin_type_id == 8){
+      $alsin_items = DB::table('transaction_upja_rice_seeds')
+                        ->select('rice_seeds.id', 'rice_seeds.name')
+                        ->Join ('rice_seeds', 'rice_seeds.id', '=', 'transaction_upja_rice_seeds.rice_seed_id')
+                        ->Where('transaction_upja_rice_seeds.upja_id',  $request->upja_id )
+                        ->get();
+    }else if($request->alsin_type_id == 11){
 
-      $alsin = DB::table('alsins')
-                         ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
-                         ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
-                         ->select('alsins.id as alsin_id','alsin_types.id as alsin_type_id'
-                                  ,'alsin_types.name as alsin_type_name','alsins.cost','alsin_types.picture_detail'
-                                     )
-                        ->Where('upjas.id', $request->upja_id )
-                        ->Where('alsin_types.id', $request->alsin_type_id )
-                        ->groupBy('alsins.id','alsin_types.id','alsin_types.name'
-                                  ,'alsins.cost','alsin_types.picture_detail')
-                        ->first();
+      $alsin_items = DB::table('transaction_upja_reparations')
+                        ->select('alsin_types.id', 'alsin_types.name')
+                        ->Join ('alsin_types', 'alsin_types.id', '=', 'transaction_upja_reparations.alsin_type_id')
+                        ->Where('transaction_upja_reparations.upja_id',  $request->upja_id )
+                        ->get();
+    }else if($request->alsin_type_id == 12){
 
-      if($alsin == null){
-        $final = array('message'=> 'upja tidak ditemukan');
-        return array('status' => 0 ,'result'=>$final);
-      }
-      $alsin_items = DB::table('alsin_items')
-                         ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code',
-                                  'alsin_items.description', 'alsin_items.status')
-                        ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
-                        ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
-                        ->Where('alsin_items.alsin_id',  $alsin->alsin_id )
+      $alsin_items = DB::table('trasansaction_upja_spare_parts')
+                        ->select('spare_parts.id', 'spare_parts.name')
+                        ->Join ('spare_parts', 'spare_parts.id', '=', 'trasansaction_upja_spare_parts.spare_part_id')
+                        ->Where('trasansaction_upja_spare_parts.upja_id',  $request->upja_id )
+                        ->get();
+    }else if($request->alsin_type_id == 13){
+
+      $alsin_items = DB::table('transaction_upja_trainings')
+                        ->select('trainings.id', 'trainings.name')
+                        ->Join ('trainings', 'trainings.id', '=', 'transaction_upja_trainings.training_id')
+                        ->Where('transaction_upja_trainings.upja_id',  $request->upja_id )
                         ->get();
     }
 
-
-    $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items);
+    $final = array( 'alsin_items'=>$alsin_items);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -326,7 +335,7 @@ class Admin_Controller extends Controller
                        ->select('alsin_items.id as alsin_item_id' ,'alsin_items.vechile_code'
                                ,'alsin_items.status','alsin_types.id as alsin_type_id'
                                ,'alsin_types.name as alsin_type_name' , 'upjas.id as upja_id'
-                               ,'upjas.name as upja_name'
+                               ,'upjas.name as upja_name','alsin_items.description'
                                    )
                       ->Where('alsin_items.id', $request->alsin_item_id )
                       ->first();
@@ -477,10 +486,11 @@ class Admin_Controller extends Controller
                                       ->limit(1)
                                       ->get();
 
-    $final_alsin = $alsins->merge($rice)->merge($rice_seed)->merge($rmu)
+    $temp = collect();
+    $other_service = $temp->merge($rice)->merge($rice_seed)->merge($rmu)
                   ->merge($reparation)->merge($training)->merge($spare_part);
 
-    $final = array('transaction'=>$transaction, 'alsins'=>$final_alsin);
+    $final = array('alsins'=>$alsins, 'other_service' =>$other_service);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -490,7 +500,7 @@ class Admin_Controller extends Controller
 
       $alsins = DB::table('transaction_order_children')
                          ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code'
-                                  , 'alsin_items.status', 'transaction_order_types.cost'
+                                  , 'alsin_items.status', 'alsin_items.description'
                                   )
                         ->Join ('transaction_order_types', 'transaction_order_types.id', '=',
                                 'transaction_order_children.transaction_order_type_id')
@@ -543,7 +553,7 @@ class Admin_Controller extends Controller
                                                     'transaction_order_reparations.cost',
                                                     'transaction_order_reparations.alsin_type_id as alsins_order_id',
                                                     'transaction_order_reparations.alsin_type_order_id as alsin_type_id'
-                                                    , 'alsin_type_order.name as alsin_type_order_name'
+                                                    , 'alsin_type_order.name'
                                                     , 'alsin_type_order.picture_detail as alsins_order_picture'
                                                     , 'alsin_type_source.name as alsin_type_name'
                                                     , 'alsin_type_source.picture_detail as alsins_picture'
@@ -837,8 +847,89 @@ class Admin_Controller extends Controller
                         ->get();
     }
 
-    $transaction = array('meta'=>sizeof($transactions), 'transactions'=>$transactions);
-    $final = array('transactions'=>$transaction);
+    $final = array('transactions'=>$transactions);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function import_spare_part(Request $request ){
+
+    // validasi
+    $this->validate($request, [
+      'name' => 'required|mimes:csv,xls,xlsx'
+    ]);
+
+    // menangkap file excel
+    $file = $request->file('name');
+
+    // membuat nama file unik
+    $nama_file = rand().$file->getClientOriginalName();
+
+    // upload ke folder file_siswa di dalam folder public
+    $file->move('file_users',$nama_file);
+
+    Excel::import(new spare_part_Excel, public_path('/file_users/'.$nama_file));
+
+    $final = array('message'=> "import sukses");
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_spare_part_type(Request $request ){
+
+    $check_alsin_type_id = Helper::check_alsin_type($request->alsin_type_id);
+
+    if($check_alsin_type_id == null){
+      $final = array('message'=> "alsin type not found");
+      return array('status' => 0 ,'result'=>$final);
+    }
+
+    $spare_part_types = DB::table('spare_part_types')
+                       ->select('spare_part_types.id as spare_part_type_id', 'spare_part_types.name
+                                  as spare_part_type_name'
+                                )
+                      ->Where('spare_part_types.alsin_type_id',  $request->alsin_type_id )
+                      ->get();
+
+    $final = array('spare_part_types'=> $spare_part_types);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function show_spare_part(Request $request ){
+
+    $check_alsin_type_id = Helper::check_spare_part_type($request->spare_part_type_id);
+
+    if($check_alsin_type_id == null){
+      $final = array('message'=> "spare type not found");
+      return array('status' => 0 ,'result'=>$final);
+    }
+
+    $spare_part = DB::table('spare_parts')
+                       ->select('spare_parts.id as spare_part_id', 'spare_parts.name as spare_part_name'
+                                , 'spare_parts.kode_produk', 'spare_parts.part_number'
+                                )
+                      ->Where('spare_parts.spare_part_type_id',  $request->spare_part_type_id )
+                      ->get();
+
+
+    $final = array('spare_parts'=> $spare_part);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function update_spare_part_type(Request $request ){
+
+    $spare_part = spare_part_type::find($request->spare_part_type_id);
+    $spare_part->name = $request->name;
+    $spare_part->save();
+
+    $final = array('message'=> "update sukses");
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function delete_spare_part(Request $request ){
+
+    $spare_part = spare_part::find($request->spare_part_id);
+    $spare_part->delete();
+
+    $final = array('message'=> "delete sukses");
     return array('status' => 1 ,'result'=>$final);
   }
 }

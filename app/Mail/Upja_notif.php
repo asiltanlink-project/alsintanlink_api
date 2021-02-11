@@ -2,24 +2,24 @@
 
 namespace App\Mail;
 
-use App\Models\Upja;
+use App\Models\Farmer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class Upja_Verif extends Mailable
+class Upja_notif extends Mailable
 {
     use Queueable, SerializesModels;
-    public $upja;
+    public $farmer;
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(Upja $upja)
+    public function __construct(Farmer $farmer)
     {
-        $this->upja = $upja;
+        $this->farmer = $farmer;
 
     }
 
@@ -31,6 +31,6 @@ class Upja_Verif extends Mailable
     public function build()
     {
 
-        return $this->from('alsintanlink@gmail.com')->view('email.upja_verif');
+        return $this->from('alsintanlink@gmail.com')->view('email.upja_notif');
     }
 }

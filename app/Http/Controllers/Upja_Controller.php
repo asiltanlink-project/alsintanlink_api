@@ -454,14 +454,16 @@ class Upja_Controller extends Controller
 
     $upja = Upja::select('upjas.id','upjas.email','upjas.name','upjas.leader_name','upjas.class',
                         'upjas.legality','indoregion_provinces.name as province','indoregion_regencies.name as city',
-                        'indoregion_districts.name as district','indoregion_provinces.id as province_id',
-                        'indoregion_regencies.id as city_id','indoregion_districts.id as district_id',
+                        'indoregion_districts.name as district','indoregion_villages.name as village',
+                        'indoregion_provinces.id as province_id','indoregion_regencies.id as city_id',
+                        'indoregion_districts.id as district_id','indoregion_villages.id as village_id',
                         DB::raw("(select 0) as rice, (select 0) as rice_seed, (select 0) as rmu,
                                  (select 0) as reparation, (select 0) as training, (select 0) as spare_part")
                         )
                  ->Join ('indoregion_provinces', 'indoregion_provinces.id', '=', 'upjas.province')
                  ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'upjas.city')
                  ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'upjas.district')
+                 ->Join ('indoregion_villages', 'indoregion_villages.id', '=', 'upjas.village')
                  ->find( $user_id );
 
     $other_service = Alsin::select('alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name')
@@ -470,17 +472,41 @@ class Upja_Controller extends Controller
                       ->where('upja_id' ,  $user_id )
                       ->get();
 
-    // $training = transaction_upja_training::
-    //                     select('trainings.id', 'trainings.name')
-    //                   ->Join ('trainings', 'trainings.id', '=', 'transaction_upja_trainings.training_id')
-    //                   ->where('transaction_upja_trainings.upja_id' ,  $user_id )
-    //                   ->get();
-    // return array('status' => 1 ,'result'=>$training);
+    $reparations = transaction_upja_reparation::
+                        select('alsin_types.id as alsin_type_id', 'alsin_types.name as alsin_type_name')
+                      ->Join ('alsin_types', 'transaction_upja_reparations.alsin_type_id',
+                              '=', 'alsin_types.id')
+                      ->where('transaction_upja_reparations.upja_id' ,  $user_id )
+                      ->get();
+
+    $training = transaction_upja_training::
+                        select('trainings.id', 'trainings.name')
+                      ->Join ('trainings', 'trainings.id', '=', 'transaction_upja_trainings.training_id')
+                      ->where('transaction_upja_trainings.upja_id' ,  $user_id )
+                      ->get();
+
+    $rice_seed = transaction_upja_rice_seed::
+                        select('rice_seeds.id', 'rice_seeds.name')
+                      ->Join ('rice_seeds', 'rice_seeds.id', '=', 'transaction_upja_rice_seeds.rice_seed_id')
+                      ->where('transaction_upja_rice_seeds.upja_id' ,  $user_id )
+                      ->get();
+
+
     for($i =0 ; $i < sizeof($other_service) ; $i++){
       $this->convert_other_service($other_service[$i]->alsin_type_id ,$upja );
     }
+    for($i =0 ; $i < sizeof($reparations) ; $i++){
+      $this->convert_upja_reparation($reparations[$i]->alsin_type_id ,$upja );
+    }
+    for($i =0 ; $i < sizeof($training) ; $i++){
+      $this->convert_upja_training($training[$i]->id ,$upja );
+    }
+    for($i =0 ; $i < sizeof($rice_seed) ; $i++){
+      $this->convert_upja_rice_seed($rice_seed[$i]->id ,$upja );
+    }
 
-    $final = array('upja'=>$upja);
+    $final = array('upja'=>$upja, 'reparations'=>$reparations,
+                   'training'=>$training, 'rice_seed'=>$rice_seed);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -498,6 +524,75 @@ class Upja_Controller extends Controller
       $upja->spare_part = 1;
     }else if($alsin_type_id == 13){
       $upja->training = 1;
+    }
+  }
+
+  private function convert_upja_training($training_id, $upja){
+
+    if($training_id == 1){
+      $upja->trainingOperator = 1;
+    }else if($training_id == 2){
+      $upja->trainingPerawatan = 1;
+    }else if($training_id == 3){
+      $upja->trainingPerbaikan = 1;
+    }else if($training_id == 4){
+      $upja->trainingPembengkelan = 1;
+    }else if($training_id == 5){
+      $upja->trainingPembibitan = 1;
+    }
+  }
+
+  private function convert_upja_reparation($alsin_type_id, $upja){
+
+    if($alsin_type_id == 1){
+      $upja->traktorRoda2 = 1;
+    }else if($alsin_type_id == 2){
+      $upja->traktorRoda4 = 1;
+    }else if($alsin_type_id == 3){
+      $upja->pompa = 1;
+    }else if($alsin_type_id == 4){
+      $upja->transplanter = 1;
+    }else if($alsin_type_id == 5){
+      $upja->powerWeeder = 1;
+    }else if($alsin_type_id == 6){
+      $upja->combineHarvester = 1;
+    }else if($alsin_type_id == 7){
+      $upja->dryer = 1;
+    }
+  }
+
+  private function convert_upja_rice_seed($alsin_type_id, $upja){
+
+    if($alsin_type_id == 1){
+      $upja->benihPadiInpari30 = 1;
+    }else if($alsin_type_id == 2){
+      $upja->benihPadiInpari33 = 1;
+    }else if($alsin_type_id == 3){
+      $upja->benihPadiInpari42 = 1;
+    }
+
+    else if($alsin_type_id == 4){
+      $upja->benihPadiInpari43 = 1;
+    }else if($alsin_type_id == 5){
+      $upja->benihPadiCiherang = 1;
+    }else if($alsin_type_id == 6){
+      $upja->benihPadiIR64 = 1;
+    }
+
+    else if($alsin_type_id == 7){
+      $upja->benihPadiInpago12 = 1;
+    }else if($alsin_type_id == 8){
+      $upja->benihPadiMembramo = 1;
+    }else if($alsin_type_id == 9){
+      $upja->benihPadiRindang = 1;
+    }
+
+    else if($alsin_type_id == 10){
+      $upja->benihPadiSintanur = 1;
+    }else if($alsin_type_id == 11){
+      $upja->benihPadiSitubagendit = 1;
+    }else if($alsin_type_id == 12){
+      $upja->benihPadiTrabas = 1;
     }
   }
 
@@ -554,10 +649,10 @@ class Upja_Controller extends Controller
     $this->other_service_update($request->spare_par ,$user_id , 12 );
 
     // benih padi
-    $this->update_rice_seed($request->benihPadiInfari30 ,$user_id , 1 );
-    $this->update_rice_seed($request->benihPadiInfari33 ,$user_id , 2 );
-    $this->update_rice_seed($request->benihPadiInfari42 ,$user_id , 3 );
-    $this->update_rice_seed($request->benihPadiInfari43 ,$user_id , 4 );
+    $this->update_rice_seed($request->benihPadiInpari30 ,$user_id , 1 );
+    $this->update_rice_seed($request->benihPadiInpari33 ,$user_id , 2 );
+    $this->update_rice_seed($request->benihPadiInpari42 ,$user_id , 3 );
+    $this->update_rice_seed($request->benihPadiInpari43 ,$user_id , 4 );
     $this->update_rice_seed($request->benihPadiCiherang ,$user_id , 5 );
     $this->update_rice_seed($request->benihPadiIR64 ,$user_id , 6 );
     $this->update_rice_seed($request->benihPadiInpago12 ,$user_id , 7 );
@@ -568,15 +663,13 @@ class Upja_Controller extends Controller
     $this->update_rice_seed($request->benihPadiTrabas ,$user_id , 12 );
 
     // reparation
-    $this->update_reparation($request->reparasiTR2 ,$user_id , 1 );
-    $this->update_reparation($request->reparasiTR4 ,$user_id , 2 );
-    $this->update_reparation($request->reparasiPompa ,$user_id , 3 );
-    $this->update_reparation($request->reparasiTransplater ,$user_id , 4 );
-    $this->update_reparation($request->reparasiPowerWeeder ,$user_id , 5 );
-    $this->update_reparation($request->reparasiCombineHarvester ,$user_id , 6 );
-    $this->update_reparation($request->reparasiDryer ,$user_id , 7 );
-
-    // $this->update_sparepart($request->reparasiDryer ,$user_id , 7 );
+    $this->update_reparation($request->traktorRoda2 ,$user_id , 1 );
+    $this->update_reparation($request->traktorRoda4 ,$user_id , 2 );
+    $this->update_reparation($request->pompa ,$user_id , 3 );
+    $this->update_reparation($request->transplanter ,$user_id , 4 );
+    $this->update_reparation($request->powerWeeder ,$user_id , 5 );
+    $this->update_reparation($request->combineHarvester ,$user_id , 6 );
+    $this->update_reparation($request->dryer ,$user_id , 7 );
 
     // training
     $this->update_training($request->trainingOperator ,$user_id , 1 );
@@ -598,27 +691,35 @@ class Upja_Controller extends Controller
 
     for($i = 0; $i < sizeof($request["alsins"]) ; $i ++){
 
-      $check_alsin = Alsin::select('alsin_types.name')
+      $check_alsin = Alsin::select('alsins.id', 'alsin_types.name')
                           ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                           ->where('upja_id', $user_id)
                           ->where('alsin_type_id', $request["alsins"][$i]["alsin_type_id"])
                           ->first();
 
       if($check_alsin != null){
-        $final = array('message'=>'alsin dengan tipe ' . $check_alsin->name . ' sudah ada. silahkan update!');
-        return array('status' => 0,'result'=>$final);
-      }
-      $alsin = new Alsin;
-      $alsin->upja_id = $user_id;
-      $alsin->alsin_type_id = $request["alsins"][$i]["alsin_type_id"];
-      $alsin->cost = $request["alsins"][$i]["cost"];
-      $alsin->save();
 
-      for($j = 0; $j < $request["alsins"][$i]["total_item"] ; $j ++){
+        for($j = 0; $j < $request["alsins"][$i]["total_item"] ; $j ++){
 
-        $alsin_item = new Alsin_item;
-        $alsin_item->alsin_id = $alsin->id;
-        $alsin_item->save();
+          $alsin_item = new Alsin_item;
+          $alsin_item->alsin_id = $check_alsin->id;
+          $alsin_item->save();
+        }
+
+      }else{
+
+        $alsin = new Alsin;
+        $alsin->upja_id = $user_id;
+        $alsin->alsin_type_id = $request["alsins"][$i]["alsin_type_id"];
+        $alsin->cost = $request["alsins"][$i]["cost"];
+        $alsin->save();
+
+        for($j = 0; $j < $request["alsins"][$i]["total_item"] ; $j ++){
+
+          $alsin_item = new Alsin_item;
+          $alsin_item->alsin_id = $alsin->id;
+          $alsin_item->save();
+        }
       }
     }
 
@@ -862,7 +963,7 @@ class Upja_Controller extends Controller
                                   ,'transaction_orders.total_cost', 'transaction_orders.status'
                                   , 'transaction_orders.latitude', 'transaction_orders.longtitude'
                                   , 'transaction_orders.full_adress', 'transaction_orders.longtitude'
-                                  , 'transaction_orders.latitude'
+                                  , 'transaction_orders.latitude'  , 'transaction_orders.note'
                                   ,'upjas.id as upja_id', 'upjas.name as upja_name'
                                   ,'farmers.id as farmer_id','farmers.name as farmer_name'
                                   ,'farmers.phone_number'
@@ -878,7 +979,7 @@ class Upja_Controller extends Controller
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name'
                                , 'transaction_orders.latitude', 'transaction_orders.longtitude'
                                , 'transaction_orders.full_adress','farmers.id'
-                               ,'farmers.name','farmers.phone_number')
+                               ,'farmers.name','farmers.phone_number' , 'transaction_orders.note')
                       ->first();
 
     if($transaction == null){
@@ -1174,6 +1275,17 @@ class Upja_Controller extends Controller
     $alsins->setPath(env('APP_URL') . '/api/upja/show_form_pricing?transaction_order_id=' .
                      $request->transaction_order_id .'&keyword_alsin_item=' . $request->keyword_alsin_item  );
 
+    $alsin_item_selected = DB::table('transaction_order_children')
+                     ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code',
+                              'alsin_items.description')
+                     ->Join ('transaction_order_types', 'transaction_order_types.id', '=',
+                              'transaction_order_children.transaction_order_type_id')
+                     ->Join ('alsin_items', 'alsin_items.id', '=',
+                             'transaction_order_children.alsin_item_id')
+                     ->Where('transaction_order_types.transaction_order_id',
+                             $request->transaction_order_id )
+                     ->get();
+
     $rice = transaction_order_rice::select('transaction_order_rices.*'
                                           , 'alsin_types.name as alsin_type_name')
                                       ->where('transaction_order_rices.transaction_order_id',
@@ -1236,13 +1348,8 @@ class Upja_Controller extends Controller
                                             $request->transaction_order_id)
                                       ->get();
 
-    // $vehicles = collect();
-    //
-    // $other_service = $vehicles->merge($rice)->merge($rice_seed)
-    //               ->merge($rmu)
-    //               ->merge($reparation)->merge($training)->merge($spare_part);
-
-    $final = array('header'=>$header,'alsin_types'=>$alsin_type,'alsins'=>$alsins, 'rices'=>$rice
+    $final = array('header'=>$header,'alsin_types'=>$alsin_type,'alsins'=>$alsins
+                    , 'alsin_item_selected'=>$alsin_item_selected,'rices'=>$rice
                     , 'rice_seeds'=>$rice_seed, 'rmus'=>$rmu, 'reparations'=>$reparation
                     , 'trainings'=>$training, 'spare_parts'=>$spare_part
   );
@@ -1315,7 +1422,15 @@ class Upja_Controller extends Controller
       $final = array('message'=> "spare part not found");
       return array('status' => 0 ,'result'=>$final);
     }
+    $spare_part_check = trasansaction_upja_spare_part::
+                                where('spare_part_id',
+                                      $request->spare_part_id)
+                              ->where('upja_id',$user_id)->first();
 
+    if($spare_part_check != null){
+      $final = array('message'=> "spare part upja telah dimasukan");
+      return array('status' => 0 ,'result'=>$final);
+    }
     $spare_parts = new trasansaction_upja_spare_part;
     $spare_parts->spare_part_id = $request->spare_part_id;
     $spare_parts->upja_id = $user_id;

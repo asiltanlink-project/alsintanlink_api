@@ -13,6 +13,7 @@ use App\Models\Province;
 use App\Models\Alsin_item;
 use App\Models\Alsin_type;
 use App\Models\spare_part;
+use App\Models\spare_part_type;
 use App\Models\Transaction_order;
 
 class LogActivity
@@ -65,5 +66,10 @@ class LogActivity
 	public static function check_spare_part($spare_part_id)
 	{
 		return spare_part::find($spare_part_id);
+	}
+
+	public static function check_spare_part_type($spare_part_type_id)
+	{
+		return spare_part_type::find($spare_part_type_id);
 	}
 }

@@ -8,12 +8,14 @@ use JWTAuth;
 use App\Models\Upja;
 use App\Models\Alsin;
 use App\Models\Farmer;
+use App\Mail\Upja_notif;
 use App\Models\Alsin_item;
 use App\Models\Alsin_type;
 use Illuminate\Http\Request;
 use App\Models\Transaction_order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Transaction_order_type;
 use App\Helpers\LogActivity as Helper;
 use App\Models\transaction_notif_token;
@@ -101,28 +103,28 @@ class Farmer_Controller extends Controller
             $user->otp_code = rand(pow(10, $digits-1), pow(10, $digits)-1);
             $user->save();
 
-            // $userkey = env("zenziva_userkey");
-            // $passkey = env("zenziva_passkey");
-            // $telepon = $request->phone_number;
-            // $otp = $blog->otp_code;
-            //
-            // $url = 'https://console.zenziva.net/reguler/api/sendOTP/';
-            // $curlHandle = curl_init();
-            // curl_setopt($curlHandle, CURLOPT_URL, $url);
-            // curl_setopt($curlHandle, CURLOPT_HEADER, 0);
-            // curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-            // curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
-            // curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
-            // curl_setopt($curlHandle, CURLOPT_TIMEOUT,30);
-            // curl_setopt($curlHandle, CURLOPT_POST, 1);
-            // curl_setopt($curlHandle, CURLOPT_POSTFIELDS, array(
-            //     'userkey' => $userkey,
-            //     'passkey' => $passkey,
-            //     'to' => $telepon,
-            //     'kode_otp' => $otp
-            // ));
-            // $results = json_decode(curl_exec($curlHandle), true);
-            // curl_close($curlHandle);
+            $userkey = env("zenziva_userkey");
+            $passkey = env("zenziva_passkey");
+            $telepon = $request->phone_number;
+            $otp = $blog->otp_code;
+
+            $url = 'https://console.zenziva.net/reguler/api/sendOTP/';
+            $curlHandle = curl_init();
+            curl_setopt($curlHandle, CURLOPT_URL, $url);
+            curl_setopt($curlHandle, CURLOPT_HEADER, 0);
+            curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($curlHandle, CURLOPT_TIMEOUT,30);
+            curl_setopt($curlHandle, CURLOPT_POST, 1);
+            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, array(
+                'userkey' => $userkey,
+                'passkey' => $passkey,
+                'to' => $telepon,
+                'kode_otp' => $otp
+            ));
+            $results = json_decode(curl_exec($curlHandle), true);
+            curl_close($curlHandle);
 
             $final = array('message'=>"gagal login belum verif", 'otp_code' => $user->otp_code);
             return array('status' => 2,'result' => $final) ;
@@ -254,28 +256,28 @@ class Farmer_Controller extends Controller
     $user->otp_code = rand(pow(10, $digits-1), pow(10, $digits)-1);
     $user->save();
 
-    // $userkey = env("zenziva_userkey");
-    // $passkey = env("zenziva_passkey");
-    // $telepon = $request->phone_number;
-    // $otp = $user->otp_code;
-    //
-    // $url = 'https://console.zenziva.net/reguler/api/sendOTP/';
-    // $curlHandle = curl_init();
-    // curl_setopt($curlHandle, CURLOPT_URL, $url);
-    // curl_setopt($curlHandle, CURLOPT_HEADER, 0);
-    // curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-    // curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
-    // curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
-    // curl_setopt($curlHandle, CURLOPT_TIMEOUT,30);
-    // curl_setopt($curlHandle, CURLOPT_POST, 1);
-    // curl_setopt($curlHandle, CURLOPT_POSTFIELDS, array(
-    //     'userkey' => $userkey,
-    //     'passkey' => $passkey,
-    //     'to' => $telepon,
-    //     'kode_otp' => $otp
-    // ));
-    // $results = json_decode(curl_exec($curlHandle), true);
-    // curl_close($curlHandle);
+    $userkey = env("zenziva_userkey");
+    $passkey = env("zenziva_passkey");
+    $telepon = $request->phone_number;
+    $otp = $user->otp_code;
+
+    $url = 'https://console.zenziva.net/reguler/api/sendOTP/';
+    $curlHandle = curl_init();
+    curl_setopt($curlHandle, CURLOPT_URL, $url);
+    curl_setopt($curlHandle, CURLOPT_HEADER, 0);
+    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
+    curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($curlHandle, CURLOPT_TIMEOUT,30);
+    curl_setopt($curlHandle, CURLOPT_POST, 1);
+    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, array(
+        'userkey' => $userkey,
+        'passkey' => $passkey,
+        'to' => $telepon,
+        'kode_otp' => $otp
+    ));
+    $results = json_decode(curl_exec($curlHandle), true);
+    curl_close($curlHandle);
 
     $final = array('message'=>'resend otp succsess','otp_code'=>$user->otp_code);
     return array('status' => 1,'result'=>$final);
@@ -538,6 +540,39 @@ class Farmer_Controller extends Controller
       }
     }
 
+    // send notif to upja
+    $upja = Upja::find($request->upja_id);
+    $farmer = Farmer::find($user_id);
+
+    if(filter_var($upja->email, FILTER_VALIDATE_EMAIL)){
+        //send email
+        Mail::to($upja->email)->send(new Upja_notif($farmer));
+    }else  if(preg_match('/^[0-9]{3,15}+$/', $upja->email)){
+
+      $userkey = env("zenziva_userkey");
+      $passkey = env("zenziva_passkey");
+      $telepon = $upja->email;
+      $message = 'Ada pesanan dari petani: ' . $farmer->name . ' Silahkan cek website upja anda!';
+
+      $url = 'https://console.zenziva.net/reguler/api/sendsms/';
+      $curlHandle = curl_init();
+      curl_setopt($curlHandle, CURLOPT_URL, $url);
+      curl_setopt($curlHandle, CURLOPT_HEADER, 0);
+      curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+      curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
+      curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+      curl_setopt($curlHandle, CURLOPT_TIMEOUT,30);
+      curl_setopt($curlHandle, CURLOPT_POST, 1);
+      curl_setopt($curlHandle, CURLOPT_POSTFIELDS, array(
+          'userkey' => $userkey,
+          'passkey' => $passkey,
+          'to' => $telepon,
+          'message' => $message
+      ));
+      $results = json_decode(curl_exec($curlHandle), true);
+      curl_close($curlHandle);
+    }
+
     $final = array('message'=> 'Order Succsess'  );
     return array('status' => 1 ,'result'=>$final);
   }
@@ -574,7 +609,7 @@ class Farmer_Controller extends Controller
                        ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
                                   , 'transaction_orders.total_cost', 'transaction_orders.status', 'transaction_orders.invoice'
                                   , 'transaction_orders.latitude', 'transaction_orders.longtitude', 'transaction_orders.full_adress'
-                                  , 'upjas.id as upja_id', 'upjas.name as upja_name'
+                                  , 'upjas.id as upja_id', 'upjas.name as upja_name', 'transaction_orders.note'
                                   ,DB::raw('DATE_FORMAT(transaction_orders.delivery_time, "%d-%b-%Y") as delivery_time')
                                   ,DB::raw('DATE_FORMAT(transaction_orders.created_at, "%d-%b-%Y") as order_time')
                                 )
@@ -585,7 +620,7 @@ class Farmer_Controller extends Controller
                                , 'transaction_orders.delivery_time', 'transaction_orders.invoice'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name'
                                , 'transaction_orders.latitude', 'transaction_orders.longtitude'
-                               , 'transaction_orders.full_adress')
+                               , 'transaction_orders.full_adress',  'transaction_orders.note',)
                       ->first();
 
     if($transaction == null){

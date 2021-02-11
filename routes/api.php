@@ -40,7 +40,7 @@ Route::group(['prefix' => 'spare_part'],function ()
   Route::get('/show_alsin_type', array('middleware' => 'cors', 'uses' => 'General_Controller@show_alsin_type' ));
   Route::get('/show_spare_part_type/{alsin_type_id}', array('middleware' => 'cors', 'uses' => 'General_Controller@show_spare_part_type' ));
   Route::get('/show_spare_part_type', array('middleware' => 'cors', 'uses' => 'General_Controller@show_spare_part_type' ));
-  Route::get('/show_spare_part/{spare_part_type_id}', array('middleware' => 'cors', 'uses' => 'General_Controller@show_spare_part_search' ));
+  Route::get('/show_spare_part/{spare_part_type_id}/{key_search?}', array('middleware' => 'cors', 'uses' => 'General_Controller@show_spare_part_search' ));
   Route::get('/show_spare_part', array('middleware' => 'cors', 'uses' => 'General_Controller@show_spare_part_search' ));
 });
 
@@ -148,5 +148,11 @@ Route::group(['prefix' => 'admin'],function ()
     Route::get('/show_all_upja_traction', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_all_upja_traction' ));
     Route::post('/send_upja_alert', array('middleware' => 'cors', 'uses' => 'Admin_Controller@send_upja_alert' ));
 
+    // spare part
+    Route::post('/import_spare_part', array('middleware' => 'cors', 'uses' => 'Admin_Controller@import_spare_part' ));
+    Route::get('/show_spare_part_type', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_spare_part_type' ));
+    Route::get('/show_spare_part', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_spare_part' ));
+    Route::put('/update_spare_part_type', array('middleware' => 'cors', 'uses' => 'Admin_Controller@update_spare_part_type' ));
+    Route::delete('/delete_spare_part', array('middleware' => 'cors', 'uses' => 'Admin_Controller@delete_spare_part' ));
   });
 });
