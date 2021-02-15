@@ -11,6 +11,7 @@ use App\Mail\Upja_Verif;
 use App\Models\Alsin_item;
 use Illuminate\Http\Request;
 use App\Models\Transaction_order;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Mail\Upja_Forget_Password;
 use Illuminate\Support\Facades\Mail;
@@ -505,8 +506,7 @@ class Upja_Controller extends Controller
       $this->convert_upja_rice_seed($rice_seed[$i]->id ,$upja );
     }
 
-    $final = array('upja'=>$upja, 'reparations'=>$reparations,
-                   'training'=>$training, 'rice_seed'=>$rice_seed);
+    $final = array('upja'=>$upja);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -806,9 +806,16 @@ class Upja_Controller extends Controller
                        ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code',
                                 'alsin_items.status', 'alsin_items.description')
                       ->Where('alsin_items.alsin_id',  $alsin->alsin_id )
-                      ->get();
+                      ->paginate(10);
 
-    $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items);
+    $max_page = round($alsin_items->total() / 10);
+    $current_page =$alsin_items->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+    $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items,
+                   'current_page'=>$current_page,
+                   'max_page'=>$max_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -932,7 +939,8 @@ class Upja_Controller extends Controller
                                  , 'transaction_orders.delivery_time'
                                  , 'transaction_orders.created_at', 'farmers.id', 'farmers.name'
                                  , 'transaction_orders.status')
-                        ->get();
+                        ->paginate(10);
+
     }else{
       $transactions = DB::table('transaction_orders')
                          ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
@@ -949,10 +957,17 @@ class Upja_Controller extends Controller
                                  , 'transaction_orders.delivery_time'
                                  , 'transaction_orders.created_at', 'farmers.id', 'farmers.name'
                                  , 'transaction_orders.status')
-                        ->get();
+                        ->paginate(10);
     }
 
-    $final = array('transactions'=>$transactions);
+    $max_page = round($transactions->total() / 10);
+    $current_page =$transactions->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
+    $final = array('transactions'=>$transactions, 'current_page'=>$current_page,
+                   'max_page'=>$max_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -1270,7 +1285,7 @@ class Upja_Controller extends Controller
                          )
                       ->where('alsin_types.name', 'like', '%' . $request->keyword_alsin_item . '%')
                       ->Where('alsin_items.status','Tersedia')
-                      ->Paginate(5);
+                      ->Paginate(10);
 
     $alsins->setPath(env('APP_URL') . '/api/upja/show_form_pricing?transaction_order_id=' .
                      $request->transaction_order_id .'&keyword_alsin_item=' . $request->keyword_alsin_item  );
@@ -1284,7 +1299,7 @@ class Upja_Controller extends Controller
                              'transaction_order_children.alsin_item_id')
                      ->Where('transaction_order_types.transaction_order_id',
                              $request->transaction_order_id )
-                     ->get();
+                     ->paginate(10);
 
     $rice = transaction_order_rice::select('transaction_order_rices.*'
                                           , 'alsin_types.name as alsin_type_name')
@@ -1349,7 +1364,7 @@ class Upja_Controller extends Controller
                                       ->get();
 
     $final = array('header'=>$header,'alsin_types'=>$alsin_type,'alsins'=>$alsins
-                    , 'alsin_item_selected'=>$alsin_item_selected,'rices'=>$rice
+                    , 'alsin_item_selected'=>$alsin_item_selected  ,'rices'=>$rice
                     , 'rice_seeds'=>$rice_seed, 'rmus'=>$rmu, 'reparations'=>$reparation
                     , 'trainings'=>$training, 'spare_parts'=>$spare_part
   );
@@ -1405,9 +1420,16 @@ class Upja_Controller extends Controller
                       ->Join ('spare_part_types', 'spare_part_types.id', '=', 'spare_parts.spare_part_type_id')
                       ->Join ('alsin_types', 'alsin_types.id', '=', 'spare_part_types.alsin_type_id')
                       ->Where('trasansaction_upja_spare_parts.upja_id', $user_id )
-                      ->get();
+                      ->paginate(10);
 
-    $final = array('spare_parts'=> $spare_parts);
+    $max_page = round($spare_parts->total() / 10);
+    $current_page =$spare_parts->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
+    $final = array('spare_parts'=> $spare_parts,'max_page'=> $max_page,
+                   'current_page'=> $current_page);
     return array('status' => 1 ,'result'=>$final);
   }
 

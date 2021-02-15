@@ -66,6 +66,8 @@ class Kernel extends HttpKernel
         'jwt.farmer' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.upja' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.admin' => \App\Http\Middleware\JwtMiddleware::class,
+        'jwt.lab_uji' => \App\Http\Middleware\JwtMiddleware::class,
+        'jwt.master' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.auth' => \Tymon\JWTAuth\Middleware\GetUserFromToken::class,
       	'jwt.refresh' => \Tymon\JWTAuth\Middleware\RefreshToken::class,
     ];

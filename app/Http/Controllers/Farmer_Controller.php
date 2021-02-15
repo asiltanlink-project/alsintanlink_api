@@ -22,7 +22,6 @@ use App\Models\transaction_notif_token;
 use App\Models\Transaction_order_child;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
-
 use App\Models\Other_Service\transaction_order_rmu;
 use App\Models\Other_Service\transaction_order_rice;
 use App\Models\Other_Service\transaction_order_training;
@@ -46,7 +45,6 @@ class Farmer_Controller extends Controller
   }
 
   public function login(Request $request ){
-
 
     $user = Farmer::select('id','phone_verify','phone_number','name','password')
                     ->where('phone_number', $request->phone_number )
@@ -596,9 +594,20 @@ class Farmer_Controller extends Controller
                                , 'transaction_orders.total_cost', 'transaction_orders.status'
                                , 'transaction_orders.delivery_time','transaction_orders.invoice'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
-                      ->get();
+                      ->paginate(5);
 
-    $final = array('meta'=>sizeof($transactions), 'transactions'=>$transactions);
+    $transaction_final = $transactions->toArray()['data'];
+    $current_page = $transactions->toArray()['current_page'];
+    $last_page = $transactions->toArray()['last_page'];
+    $next_page_temp = explode('=' ,$transactions->toArray()['next_page_url'] ) ;
+    if($next_page_temp[0] == ""){
+      $next_page_url = null;
+    }else{
+      $next_page_url = $next_page_temp[1];
+    }
+
+    $final = array('transactions'=>$transaction_final, 'current_page'=>"" .$current_page,
+                   'last_page'=>"" . $last_page, 'next_page'=>$next_page_url );
     return array('status' => 1 ,'result'=>$final);
   }
 

@@ -56,6 +56,15 @@ return [
            'provider' => 'admin',
        ],
 
+       'lab_uji' => [
+          'driver' => 'jwt',
+          'provider' => 'lab_uji',
+      ],
+
+      'master' => [
+         'driver' => 'jwt',
+         'provider' => 'master',
+     ],
         'api' => [
             'driver' => 'token',
             'provider' => 'users',
@@ -97,6 +106,16 @@ return [
         'admin' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
+        ],
+
+        'lab_uji' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\lab_uji::class,
+        ],
+
+        'master' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\master::class,
         ],
         // 'users' => [
         //     'driver' => 'database',

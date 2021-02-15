@@ -93,9 +93,16 @@ class Admin_Controller extends Controller
     $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
                         )
                     ->where('village', $request->village_id )
-                    ->get();
+                    ->paginate(10);
 
-    $final = array('upjas'=>$upja);
+    $max_page = round($upja->total() / 10);
+    $current_page =$upja->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
+    $final = array('upjas'=>$upja,'max_page'=> $max_page,
+                   'current_page'=> $current_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -178,14 +185,21 @@ class Admin_Controller extends Controller
                              , 'transaction_orders.total_cost', 'transaction_orders.status'
                              , 'transaction_orders.delivery_time'
                              , 'transaction_orders.created_at', 'farmers.id', 'farmers.name')
-                    ->get();
+                    ->paginate(10);
 
   // $other_service = array('rices'=>$rice , 'rice_seeds'=>$rice_seed, 'rmus'=>$rmu,
   //                 'reparations'=>$transaction_order_reparation,
   //                 'trainings'=>$transaction_order_training,
   //                 'spare_parts'=>$transaction_order_spare_part  );
+    $max_page = round($transactions->total() / 10);
+    $current_page =$transactions->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
     $final = array('upja'=>$upja ,'alsins' =>$alsins,'other_service' =>$other_service,
-                   'transactions' =>$transactions);
+                   'transactions' =>$transactions,'max_page'=> $max_page,
+                   'current_page'=> $current_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -200,9 +214,14 @@ class Admin_Controller extends Controller
 
     $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
                     ->where('village', $request->village_id )
-                    ->get();
-
-    $final = array('farmers'=>$farmers);
+                    ->paginate(10);
+    $max_page = round($farmers->total() / 10);
+    $current_page =$farmers->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+    $final = array('farmers'=>$farmers,'max_page'=> $max_page,
+                   'current_page'=> $current_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -236,10 +255,16 @@ class Admin_Controller extends Controller
                                , 'transaction_orders.total_cost', 'transaction_orders.status'
                                , 'transaction_orders.delivery_time'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
-                      ->get();
+                      ->paginate(10);
 
-    $transaction = array('meta'=>sizeof($transactions), 'transactions'=>$transactions);
-    $final = array('farmer'=>$farmer, 'transactions'=>$transaction);
+    $max_page = round($transactions->total() / 10);
+    $current_page =$transactions->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
+    $final = array('farmer'=>$farmer, 'transactions'=>$transactions,
+                   'max_page'=> $max_page,'current_page'=> $current_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -289,8 +314,17 @@ class Admin_Controller extends Controller
                         ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                         ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                         ->Where('alsin_items.alsin_id',  $alsin->alsin_id )
-                        ->get();
-      $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items);
+                        ->paginate(10);
+
+      $max_page = round($alsin_items->total() / 10);
+      $current_page =$alsin_items->currentPage();
+      if($max_page == 0){
+        $max_page = 1;
+      }
+
+      $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items,
+                     'current_page'=>$current_page,'max_page'=>$max_page);
+
       return array('status' => 1 ,'result'=>$final);
     }else if($request->alsin_type_id == 9){
 
@@ -298,28 +332,72 @@ class Admin_Controller extends Controller
                         ->select('rice_seeds.id', 'rice_seeds.name')
                         ->Join ('rice_seeds', 'rice_seeds.id', '=', 'transaction_upja_rice_seeds.rice_seed_id')
                         ->Where('transaction_upja_rice_seeds.upja_id',  $request->upja_id )
-                        ->get();
+                        ->paginate(10);
+
+      $max_page = round($alsin_items->total() / 10);
+      $current_page =$alsin_items->currentPage();
+      if($max_page == 0){
+        $max_page = 1;
+      }
+
+      $final = array('alsin_items'=>$alsin_items,
+                     'current_page'=>$current_page,'max_page'=>$max_page);
+
+      return array('status' => 1 ,'result'=>$final);
+
     }else if($request->alsin_type_id == 11){
 
       $alsin_items = DB::table('transaction_upja_reparations')
                         ->select('alsin_types.id', 'alsin_types.name')
                         ->Join ('alsin_types', 'alsin_types.id', '=', 'transaction_upja_reparations.alsin_type_id')
                         ->Where('transaction_upja_reparations.upja_id',  $request->upja_id )
-                        ->get();
+                        ->paginate(10);
+
+      $max_page = round($alsin_items->total() / 10);
+      $current_page =$alsin_items->currentPage();
+      if($max_page == 0){
+        $max_page = 1;
+      }
+
+      $final = array('alsin_items'=>$alsin_items,
+                     'current_page'=>$current_page,'max_page'=>$max_page);
+
+      return array('status' => 1 ,'result'=>$final);
+
     }else if($request->alsin_type_id == 12){
 
       $alsin_items = DB::table('trasansaction_upja_spare_parts')
                         ->select('spare_parts.id', 'spare_parts.name')
                         ->Join ('spare_parts', 'spare_parts.id', '=', 'trasansaction_upja_spare_parts.spare_part_id')
                         ->Where('trasansaction_upja_spare_parts.upja_id',  $request->upja_id )
-                        ->get();
+                        ->paginate(10);
+      $max_page = round($alsin_items->total() / 10);
+      $current_page =$alsin_items->currentPage();
+      if($max_page == 0){
+        $max_page = 1;
+      }
+      $final = array('alsin_items'=>$alsin_items,
+                     'current_page'=>$current_page,'max_page'=>$max_page);
+      return array('status' => 1 ,'result'=>$final);
+
     }else if($request->alsin_type_id == 13){
 
       $alsin_items = DB::table('transaction_upja_trainings')
                         ->select('trainings.id', 'trainings.name')
                         ->Join ('trainings', 'trainings.id', '=', 'transaction_upja_trainings.training_id')
                         ->Where('transaction_upja_trainings.upja_id',  $request->upja_id )
-                        ->get();
+                        ->paginate(10);
+
+      $max_page = round($alsin_items->total() / 10);
+      $current_page =$alsin_items->currentPage();
+      if($max_page == 0){
+        $max_page = 1;
+      }
+
+      $final = array('alsin_items'=>$alsin_items,
+                     'current_page'=>$current_page,'max_page'=>$max_page);
+
+      return array('status' => 1 ,'result'=>$final);
     }
 
     $final = array( 'alsin_items'=>$alsin_items);
@@ -367,9 +445,16 @@ class Admin_Controller extends Controller
                                , 'transaction_orders.delivery_time'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name'
                                , 'farmers.id', 'farmers.name')
-                      ->get();
+                      ->paginate(10);
 
-    $final = array('alsin_items'=>$alsin_item, 'transactions'=>$transactions);
+    $max_page = round($transactions->total() / 10);
+    $current_page =$transactions->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
+    $final = array('alsin_items'=>$alsin_item, 'transactions'=>$transactions,
+                   'current_page'=>$current_page,'max_page'=>$max_page);
     return array('status' => 1 ,'result'=>$final);
   }
   public function show_detail_transaction(Request $request ){
@@ -508,10 +593,18 @@ class Admin_Controller extends Controller
                         ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                         ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
                         ->Where('transaction_order_children.transaction_order_type_id',  $request->transaction_order_type_id )
-                        ->get();
+                        ->paginate(5);
 
-      $final = array('alsin_items'=>$alsins);
+      $max_page = round($alsins->total() / 5);
+      $current_page = $alsins->currentPage();
+      if($max_page == 0){
+        $max_page = 1;
+      }
+      $final = array('alsin_items'=>$alsins, 'current_page'=>$current_page,
+                     'max_page'=>$max_page);
+
       return array('status' => 1 ,'result'=>$final);
+
     }else if($request->alsin_other == 1){
 
       switch($request->alsin_type_id){
@@ -580,6 +673,7 @@ class Admin_Controller extends Controller
                                             ->where('transaction_order_spare_parts.id',
                                                   $request->transaction_order_type_id)
                                             ->get();
+
             break;
         case 13:
           $alsins = transaction_order_training::
@@ -737,10 +831,17 @@ class Admin_Controller extends Controller
                       ->orderBy('upjas.id','asc')
                       ->orderByRaw('total_transaction','asc')
                       ->Where('upjas.province',  $request->provinces )
-                      ->get();
+                      ->paginate(10);
 
+    $max_page = round($transactions_all->total() / 10);
+    $current_page =$transactions_all->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
 
-    $final = array('transactions_all'=>$transactions_all);
+    $final = array('transactions_all'=>$transactions_all,
+                   'current_page'=>$current_page,
+                   'max_page'=>$max_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -829,7 +930,7 @@ class Admin_Controller extends Controller
                                  , 'transaction_orders.total_cost', 'transaction_orders.status'
                                  , 'transaction_orders.delivery_time'
                                  , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
-                        ->get();
+                        ->paginate(5);
     }else{
       $transactions = DB::table('transaction_orders')
                          ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
@@ -844,10 +945,17 @@ class Admin_Controller extends Controller
                                  , 'transaction_orders.total_cost', 'transaction_orders.status'
                                  , 'transaction_orders.delivery_time'
                                  , 'transaction_orders.created_at', 'upjas.id', 'upjas.name')
-                        ->get();
+                        ->paginate(5);
     }
 
-    $final = array('transactions'=>$transactions);
+    $max_page = round($transactions->total() / 5);
+    $current_page =$transactions->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
+    $final = array('transactions'=>$transactions,
+                   'current_page'=>$current_page,'max_page'=>$max_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -887,9 +995,16 @@ class Admin_Controller extends Controller
                                   as spare_part_type_name'
                                 )
                       ->Where('spare_part_types.alsin_type_id',  $request->alsin_type_id )
-                      ->get();
+                      ->paginate(10);
 
-    $final = array('spare_part_types'=> $spare_part_types);
+    $max_page = round($spare_part_types->total() / 10);
+    $current_page =$spare_part_types->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
+
+    $final = array('spare_part_types'=> $spare_part_types,
+                   'current_page'=>$current_page,'max_page'=>$max_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -907,10 +1022,16 @@ class Admin_Controller extends Controller
                                 , 'spare_parts.kode_produk', 'spare_parts.part_number'
                                 )
                       ->Where('spare_parts.spare_part_type_id',  $request->spare_part_type_id )
-                      ->get();
+                      ->paginate(10);
 
+    $max_page = round($spare_part->total() / 10);
+    $current_page =$spare_part->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
 
-    $final = array('spare_parts'=> $spare_part);
+    $final = array('spare_parts'=> $spare_part,
+                   'current_page'=>$current_page,'max_page'=>$max_page);
     return array('status' => 1 ,'result'=>$final);
   }
 
