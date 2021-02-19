@@ -162,11 +162,20 @@ Route::group(['prefix' => 'lab_uji'],function ()
   Route::post('/register', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@register' ));
   Route::post('/login', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@login' ));
   Route::post('/forget_password', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@forget_password' ));
+  Route::put('/update_token',array('middleware' => 'cors', 'uses' => 'lab_uji_controller@update_token' ) );
+  Route::delete('/delete_token',array('middleware' => 'cors', 'uses' => 'lab_uji_controller@delete_token' ) );
 
   Route::group(['middleware' => ['assign.guard:lab_uji','jwt.lab_uji']],function ()
   {
     Route::get('/show_detail_lab_uji', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@show_detail_lab_uji' ));
     Route::put('/create_company_profile', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@create_company_profile' ));
+    Route::post('/upload_doc_perorangan', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_doc_perorangan' ));
+    Route::post('/upload_doc_dalam_negeri', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_doc_dalam_negeri' ));
+    Route::post('/upload_doc_import', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_doc_import' ));
+    Route::post('/create_Form', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@create_Form' ));
+    Route::get('/show_jadwal_uji', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@show_jadwal_uji' ));
+    Route::post('/send_billing', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@send_billing' ));
+    Route::post('/upload_billing', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_billing' ));
   });
 });
 

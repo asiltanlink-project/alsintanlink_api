@@ -18,6 +18,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Excel\spare_part_Excel;
 use App\Helpers\LogActivity as Helper;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 use App\Models\Other_Service\transaction_order_rmu;
@@ -973,9 +974,17 @@ class Admin_Controller extends Controller
     $nama_file = rand().$file->getClientOriginalName();
 
     // upload ke folder file_siswa di dalam folder public
-    $file->move('file_users',$nama_file);
+    // $file->move('file_users',$nama_file);
+    $upload = Storage::putFile(
+        'public/admin/spare_part/' ,
+        $request->file('name')
+    );
 
-    Excel::import(new spare_part_Excel, public_path('/file_users/'.$nama_file));
+    $storageName = basename($upload);
+    $temp_path = Storage::url('admin/spare_part/' . $storageName);
+    $path_url_ktp = env('APP_URL') . ''. $temp_path ;
+
+    Excel::import(new spare_part_Excel, request()->file('name'));
 
     $final = array('message'=> "import sukses");
     return array('status' => 1 ,'result'=>$final);
