@@ -629,7 +629,7 @@ class Farmer_Controller extends Controller
                                , 'transaction_orders.delivery_time', 'transaction_orders.invoice'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name'
                                , 'transaction_orders.latitude', 'transaction_orders.longtitude'
-                               , 'transaction_orders.full_adress',  'transaction_orders.note',)
+                               , 'transaction_orders.full_adress',  'transaction_orders.note')
                       ->first();
 
     if($transaction == null){
