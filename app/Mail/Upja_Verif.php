@@ -31,6 +31,6 @@ class Upja_Verif extends Mailable
     public function build()
     {
 
-        return $this->from('alsintanlink@gmail.com')->view('email.upja_verif');
+        return $this->subject('Email Verification')->from('alsintanlink@gmail.com')->view('email.upja_verif');
     }
 }

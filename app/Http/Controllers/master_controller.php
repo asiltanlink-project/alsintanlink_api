@@ -7,8 +7,11 @@ use JWTAuth;
 use App\Models\master;
 use App\Models\lab_uji;
 use Illuminate\Http\Request;
+use App\Mail\Master_Kode_Billing;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use App\Helpers\LogActivity as Helper;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 use App\Models\lab_uji\transaction_lab_uji_form;
@@ -57,7 +60,7 @@ class master_controller extends Controller
             JWTAuth::factory()->setTTL($myTTL);
             $token = JWTAuth::attempt($credentials);
 
-           $final = array('message' => 'login sukses','token' => $token);
+           $final = array('message' => 'login berhasil','token' => $token);
 
            return array('status' => 1, 'result' => $final);
 
@@ -74,12 +77,12 @@ class master_controller extends Controller
 
   public function show_lab_uji(Request $request){
 
-    if($request->status_journey == null){
+    if($request->verify == null){
       $lab_uji = lab_uji::orderBy('created_at','desc')
                           ->paginate(10);
     }else{
-      $lab_uji = lab_uji::where('status_journey',$request->status_journey)->
-                          orderBy('created_at','desc')
+      $lab_uji = lab_uji::where('verify',$request->verify)
+                          // ->with('transaction_forms')
                           ->paginate(10);
     }
 
@@ -98,65 +101,120 @@ class master_controller extends Controller
 
     $lab_uji = Helper::check_lab_uji($request->lab_uji_id);
     if($lab_uji == null){
-      $final = array('message'=> "lab uji not found");
+      $final = array('message'=> "lab uji tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
     if($lab_uji->company_type == 0){
 
-      $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id', $user_id )->first();
-      $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
-      $company_type->url_manual_book = 'https://alsintanlink.com/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
+      $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id',$request->lab_uji_id)->first();
+      if($company_type!=null){
+        $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
+      }
 
     }else if($lab_uji->company_type == 1){
 
-      $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id', $user_id )->first();
-      $company_type->url_akte_pendirian_perusahaan = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-      $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
-      $company_type->url_manual_book = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
-      $company_type->url_npwp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
-      $company_type->url_siup = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
-      $company_type->url_surat_keterangan_domisili = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-      $company_type->url_surat_suku_cadang = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
-      $company_type->url_tdp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
+      $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id', $request->lab_uji_id )->first();
+      if($company_type!=null){
+        $company_type->url_akte_pendirian_perusahaan = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keterangan_domisili = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
+      }
 
     }else if($lab_uji->company_type == 2){
 
-      $company_type = transaction_lab_uji_doc_import::where('lab_uji_id', $user_id )->first();
-      $company_type->url_akte_pendirian_perusahaan = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-      $company_type->url_api = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
-      $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
-      $company_type->url_manual_book = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
-      $company_type->url_npwp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
-      $company_type->url_siup = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
-      $company_type->url_surat_keagenan_negara = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
-      $company_type->url_surat_keterangan_domisili = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-      $company_type->url_surat_pernyataan_suku_cadang = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_pernyataan_suku_cadang/' . $company_type->url_surat_pernyataan_suku_cadang;
-      $company_type->url_tdp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
+      $company_type = transaction_lab_uji_doc_import::where('lab_uji_id', $request->lab_uji_id )->first();
+      if($company_type!=null){
+
+        $company_type->url_akte_pendirian_perusahaan = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_api = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
+        $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keagenan_negara = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
+        $company_type->url_surat_keterangan_domisili = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
+      }
     }else{
       $company_type = null;
     }
 
-    $lab_uji_form = transaction_lab_uji_form::select('transaction_lab_uji_forms.*' ,
+    $lab_uji_form = transaction_lab_uji_form::select('transaction_lab_uji_forms.id' ,
+                                                    'transaction_lab_uji_forms.nama_alsintan' ,
                                                     'lab_uji_status_alsintan.name as status_alsintan_name',
-                                                    'lab_uji_status_pemohon.name as status_pemohon_name')->
+                                                    'lab_uji_status_pemohon.name as status_pemohon_name',
+                                                    'lab_uji_journey.name as status_journey')->
                                               where('lab_uji_id', $request->lab_uji_id )->
                                               Join ('lab_uji_status_pemohon', 'lab_uji_status_pemohon.id',
                                                     '=', 'transaction_lab_uji_forms.status_pemohon')->
                                               Join ('lab_uji_status_alsintan', 'lab_uji_status_alsintan.id',
                                                     '=', 'transaction_lab_uji_forms.status_alsintan')->
-                                              first();
-
-    $lab_uji_jadwal = transaction_lab_uji_jadwal_uji::select('transaction_lab_uji_jadwal_ujis.*' ,
-                                    'lab_uji_journey.name as status_name')->
-                                    where('lab_uji_id', $request->lab_uji_id )->
-                                    Join ('lab_uji_journey', 'lab_uji_journey.id',
-                                    '=', 'transaction_lab_uji_jadwal_ujis.status')->
-                                    first();
+                                              Join ('lab_uji_journey', 'lab_uji_journey.id',
+                                                    '=', 'transaction_lab_uji_forms.status_journey')->
+                                              get();
+    // $lab_uji_form = transaction_lab_uji_form::select('transaction_lab_uji_forms.*' ,
+    //                                                 'lab_uji_status_alsintan.name as status_alsintan_name',
+    //                                                 'lab_uji_status_pemohon.name as status_pemohon_name')->
+    //                                           where('lab_uji_id', $request->lab_uji_id )->
+    //                                           Join ('lab_uji_status_pemohon', 'lab_uji_status_pemohon.id',
+    //                                                 '=', 'transaction_lab_uji_forms.status_pemohon')->
+    //                                           Join ('lab_uji_status_alsintan', 'lab_uji_status_alsintan.id',
+    //                                                 '=', 'transaction_lab_uji_forms.status_alsintan')->
+    //                                           first();
+    //
+    // $lab_uji_jadwal = transaction_lab_uji_jadwal_uji::select('transaction_lab_uji_jadwal_ujis.*')->
+    //                                 where('lab_uji_id', $request->lab_uji_id )->
+    //                                 first();
+    // if($lab_uji_jadwal != null){
+    //   $lab_uji_jadwal->bukti_pembayaran = 'https://alsintanlink.com/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
+    //   $lab_uji_jadwal->scan_hasil_uji= 'https://alsintanlink.com/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
+    // }
 
     $final = array('lab_uji'=> $lab_uji, 'company_type'=> $company_type,
-                   'lab_uji_form'=> $lab_uji_form, 'lab_uji_jadwal'=> $lab_uji_jadwal);
+                   'lab_uji_form'=> $lab_uji_form);
 
+    return array('status' => 1,'result'=>$final);
+  }
+
+  public function show_detail_form(Request $request){
+
+    $lab_uji_form = transaction_lab_uji_form::select('transaction_lab_uji_forms.*',
+                                                    'lab_uji_status_alsintan.name as status_alsintan_name',
+                                                    'lab_uji_status_pemohon.name as status_pemohon_name')->
+                                              where('transaction_lab_uji_forms.id', $request->form_uji_id )->
+                                              Join ('lab_uji_status_pemohon', 'lab_uji_status_pemohon.id',
+                                                    '=', 'transaction_lab_uji_forms.status_pemohon')->
+                                              Join ('lab_uji_status_alsintan', 'lab_uji_status_alsintan.id',
+                                                    '=', 'transaction_lab_uji_forms.status_alsintan')->
+                                              first();
+    if($lab_uji_form == null){
+      $final = array('message'=> 'form lab uji tidak ditemukan');
+      return array('status' => 1,'result'=>$final);
+    }
+
+    $lab_uji_jadwal = transaction_lab_uji_jadwal_uji::select('transaction_lab_uji_jadwal_ujis.*',
+                                    // DB::raw('DATE_FORMAT(transaction_lab_uji_jadwal_ujis.waktu_uji_lab, "%m-%d-%Y") as waktu_uji_lab'),
+                                    // DB::raw('DATE_FORMAT(transaction_lab_uji_jadwal_ujis.waktu_uji_lapangan, "%m-%d-%Y") as waktu_uji_lapangan')
+                                    DB::raw('DATE_FORMAT(transaction_lab_uji_jadwal_ujis.waktu_uji_lab, "%Y-%m-%d") as waktu_uji_lab'),
+                                    DB::raw('DATE_FORMAT(transaction_lab_uji_jadwal_ujis.waktu_uji_lapangan, "%Y-%m-%d") as waktu_uji_lapangan')
+                                    )->
+                                    where('form_uji_id', $request->form_uji_id )->
+                                    first();
+
+    if($lab_uji_jadwal != null){
+      $lab_uji_jadwal->bukti_pembayaran = 'https://alsintanlink.com/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
+      $lab_uji_jadwal->scan_hasil_uji= 'https://alsintanlink.com/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
+    }
+
+    $final = array('lab_uji_form'=> $lab_uji_form , 'lab_uji_jadwal'=> $lab_uji_jadwal);
     return array('status' => 1,'result'=>$final);
   }
 
@@ -164,21 +222,46 @@ class master_controller extends Controller
 
     $lab_uji = Helper::check_lab_uji($request->lab_uji_id);
     if($lab_uji == null){
-      $final = array('message'=> "lab uji not found");
+      $final = array('message'=> "lab uji tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
     if($lab_uji->company_type == 0){
 
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id', $request->lab_uji_id )->first();
-      $company_type->verif = $request->verif;
       $company_type->ktp = $request->ktp;
       $company_type->manual_book = $request->manual_book;
+
+      if($request->verif == 1){
+        $company_type->verif = 1;
+
+        $tokenList = DB::table('transaction_notif_token_labs')
+                      ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
+                      ->pluck('transaction_notif_token_labs.token')
+                       ->all();
+
+        app('App\Http\Controllers\General_Controller')->
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen diterima'
+                          ,1, $tokenList );
+      }else{
+        $company_type->verif = -1;
+
+        $tokenList = DB::table('transaction_notif_token_labs')
+                      ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
+                      ->pluck('transaction_notif_token_labs.token')
+                       ->all();
+
+        app('App\Http\Controllers\General_Controller')->
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen ditolak'
+                          ,1, $tokenList );
+      }
+
       $company_type->save();
+
     }else if($lab_uji->company_type == 1){
 
       $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id', $request->lab_uji_id )->first();
-      $company_type->verif = $request->verif;
+
       $company_type->akte_pendirian_perusahaan = $request->akte_pendirian_perusahaan;
       $company_type->ktp = $request->ktp;
       $company_type->npwp = $request->npwp;
@@ -187,11 +270,38 @@ class master_controller extends Controller
       $company_type->tdp = $request->tdp;
       $company_type->surat_suku_cadang = $request->surat_suku_cadang;
       $company_type->manual_book = $request->manual_book;
+
+
+      if($request->verif == 1){
+        $company_type->verif = 1;
+
+        $tokenList = DB::table('transaction_notif_token_labs')
+                      ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
+                      ->pluck('transaction_notif_token_labs.token')
+                       ->all();
+
+        app('App\Http\Controllers\General_Controller')->
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen diterima'
+                          ,1, $tokenList );
+      }else{
+        $company_type->verify = -1;
+
+        $tokenList = DB::table('transaction_notif_token_labs')
+                      ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
+                      ->pluck('transaction_notif_token_labs.token')
+                       ->all();
+
+        app('App\Http\Controllers\General_Controller')->
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen ditolak'
+                          ,1, $tokenList );
+      }
+
       $company_type->save();
+
     }else if($lab_uji->company_type == 2){
 
       $company_type = transaction_lab_uji_doc_import::where('lab_uji_id', $request->lab_uji_id )->first();
-      $company_type->verif = $request->verif;
+
       $company_type->akte_pendirian_perusahaan = $request->akte_pendirian_perusahaan;
       $company_type->ktp = $request->ktp;
       $company_type->npwp = $request->npwp;
@@ -201,73 +311,258 @@ class master_controller extends Controller
       $company_type->siup = $request->siup;
       $company_type->tdp = $request->tdp;
       $company_type->surat_keagenan_negara = $request->surat_keagenan_negara;
-      $company_type->surat_pernyataan_suku_cadang = $request->surat_pernyataan_suku_cadang;
+      $company_type->surat_suku_cadang = $request->surat_suku_cadang;
+
+
+      if($request->verif == 1){
+        $company_type->verif = 1;
+
+        $tokenList = DB::table('transaction_notif_token_labs')
+                      ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
+                      ->pluck('transaction_notif_token_labs.token')
+                       ->all();
+
+        app('App\Http\Controllers\General_Controller')->
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen diterima'
+                          ,1, $tokenList );
+      }else{
+        $company_type->verif = -1;
+
+        $tokenList = DB::table('transaction_notif_token_labs')
+                      ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
+                      ->pluck('transaction_notif_token_labs.token')
+                       ->all();
+
+        app('App\Http\Controllers\General_Controller')->
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen ditolak'
+                          ,1, $tokenList );
+      }
+
       $company_type->save();
     }
 
-    $final = array('message'=> "accept doc sukses");
+    $final = array('message'=> "menerima dokumen berhasil");
     return array('status' => 1,'result'=>$final);
   }
 
   public function change_status_form(Request $request){
 
-    $lab_uji = Helper::check_lab_uji($request->lab_uji_id);
-    if($lab_uji == null){
-      $final = array('message'=> "lab uji not found");
-      return array('status' => 0 ,'result'=>$final);
-    }
-
-    $lab_uji_form = transaction_lab_uji_form::where('lab_uji_id', $request->lab_uji_id )->
+    $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
                                               first();
     if($lab_uji_form == null){
-      $final = array('message'=> "lab uji form not found");
+      $final = array('message'=> "lab uji form tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $lab_uji_form->verif = $request->verif;
-    $lab_uji_form->save();
+    $lab_uji_form->keterangan = $request->keterangan;
 
-    $final = array('message'=> "accept form sukses");
+    if($request->verif == 1){
+
+      $lab_uji_form->status_journey = 2;
+      $lab_uji_form->save();
+      $tokenList = DB::table('transaction_notif_token_labs')
+                    ->where('transaction_notif_token_labs.lab_uji_id', $lab_uji_form->lab_uji_id)
+                    ->pluck('transaction_notif_token_labs.token')
+                     ->all();
+
+      app('App\Http\Controllers\General_Controller')->
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Formulir diterima'
+                        ,1, $tokenList );
+    }else{
+
+      $lab_uji_form->status_journey = -2;
+      $lab_uji_form->save();
+
+      $tokenList = DB::table('transaction_notif_token_labs')
+                    ->where('transaction_notif_token_labs.lab_uji_id', $lab_uji_form->lab_uji_id)
+                    ->pluck('transaction_notif_token_labs.token')
+                     ->all();
+
+      app('App\Http\Controllers\General_Controller')->
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Formulir ditolak'
+                        ,1, $tokenList );
+    }
+
+    $final = array('message'=> "mengganti status formulir berhasil");
     return array('status' => 1,'result'=>$final);
   }
 
   public function create_jadwal_uji(Request $request){
 
-    $lab_uji = Helper::check_lab_uji($request->lab_uji_id);
-    if($lab_uji == null){
-      $final = array('message'=> "lab uji not found");
-      return array('status' => 0 ,'result'=>$final);
+    $jadwal_uji = transaction_lab_uji_jadwal_uji::where('form_uji_id',$request->form_uji_id )
+                                                  ->first();
+    if($jadwal_uji == null){
+      $jadwal_uji = new transaction_lab_uji_jadwal_uji;
+      $jadwal_uji->lab_uji_id = $request->lab_uji_id;
+      $jadwal_uji->form_uji_id = $request->form_uji_id;
     }
-
-    $jadwal_uji = new transaction_lab_uji_jadwal_uji;
-    $jadwal_uji->lab_uji_id = $request->lab_uji_id;
     $jadwal_uji->tim_uji = $request->tim_uji;
     $jadwal_uji->waktu_uji_lab = $request->waktu_uji_lab;
     $jadwal_uji->waktu_uji_lapangan = $request->waktu_uji_lapangan;
     $jadwal_uji->lokasi_uji = $request->lokasi_uji;
     $jadwal_uji->save();
 
-    $final = array('message'=> "create jadwal sukses");
+    $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
+                                              first();
+    $lab_uji_form->status_journey = 3;
+    $lab_uji_form->save();
+
+    $tokenList = DB::table('transaction_notif_token_labs')
+                  ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
+                  ->pluck('transaction_notif_token_labs.token')
+                   ->all();
+
+    app('App\Http\Controllers\General_Controller')->
+    PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Jadwal uji telah ditentukan'
+                      ,1, $tokenList );
+
+    $final = array('message'=> "membuat jadwal berhasil");
     return array('status' => 1,'result'=>$final);
   }
 
   public function change_status_jadwal_uji(Request $request){
 
-    $lab_uji = Helper::check_lab_uji($request->lab_uji_id);
-    if($lab_uji == null){
-      $final = array('message'=> "lab uji not found");
+    $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
+                                              first();
+    if($lab_uji_form == null){
+      $final = array('message'=> "form uji tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
-    $lab_uji_form = transaction_lab_uji_jadwal_uji::where('lab_uji_id', $request->lab_uji_id )->
-                                              first();
-    if($lab_uji_form == null){
-      $final = array('message'=> "lab uji form not found");
-      return array('status' => 0 ,'result'=>$final);
-    }
-    $lab_uji_form->status = $request->status;
+    $lab_uji_form->status_journey = $request->status;
     $lab_uji_form->save();
+
+    $tokenList = DB::table('transaction_notif_token_labs')
+                  ->where('transaction_notif_token_labs.lab_uji_id', $lab_uji_form->lab_uji_id)
+                  ->pluck('transaction_notif_token_labs.token')
+                   ->all();
+
+     $lab_uji_journey = DB::table('lab_uji_journey')
+                   ->where('lab_uji_journey.id', $request->status)
+                    ->first();
+
+    app('App\Http\Controllers\General_Controller')->
+    PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: ' . $lab_uji_journey->name
+                      ,1, $tokenList );
 
     $final = array('message'=> "ganti status sukses");
     return array('status' => 1,'result'=>$final);
+  }
+
+  public function upload_kode_billing(Request $request){
+
+    $validator = \Validator::make($request->all(), [
+            'kode_billing' => 'required|file|mimes:pdf|max:7000', // max 7MB
+        ], [
+          'kode_billing.required' => 'kode_billing belum dipilih',
+          'kode_billing.file' => 'kode_billing bukan file',
+          'kode_billing.mimes' => 'kode_billing bukan pdf',
+          'kode_billing.max' => 'ukuran kode_billing melewati 7MB'
+        ]);
+
+    if ($validator->fails()) {
+      $final = array('message'=> $validator->errors()->first());
+      return array('status' => 0,'result'=>$final);
+    }
+
+    $lab_uji = transaction_lab_uji_jadwal_uji::where('form_uji_id', $request->form_uji_id)->first();
+
+    if($lab_uji == null){
+      $final = array('message'=> "jadwal belum dibuat");
+      return array('status' => 0,'result'=>$final);
+    }
+    // bukti pembayaran
+    if($request->hasFile('kode_billing')){
+      $upload = Storage::putFile(
+          'public/lab_uji_upload/kode_billing/' ,
+          $request->file('kode_billing')
+      );
+
+      $path_url_manual_book = basename($upload);
+
+      if($lab_uji->kode_billing != null){
+        $this->delete_file(storage_path('app/public/lab_uji_upload/kode_billing/' . $lab_uji->kode_billing));
+      }
+      $lab_uji->kode_billing = $path_url_manual_book;
+      $lab_uji->save();
+
+      $lab_uji_id = lab_uji::find($lab_uji->lab_uji_id);
+
+      Mail::to($lab_uji_id->email)->send(new Master_Kode_Billing($lab_uji));
+
+      $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
+                                                first();
+      $lab_uji_form->status_journey = 5;
+      $lab_uji_form->save();
+
+      $tokenList = DB::table('transaction_notif_token_labs')
+                    ->where('transaction_notif_token_labs.lab_uji_id', $lab_uji->lab_uji_id)
+                    ->pluck('transaction_notif_token_labs.token')
+                     ->all();
+
+      app('App\Http\Controllers\General_Controller')->
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Kode billing telah dikirim'
+                        ,1, $tokenList );
+    }
+
+    $final = array('message'=> "upload kode billing berhasil");
+    return array('status' => 1,'result'=>$final);
+  }
+
+  public function upload_hasil_laporan(Request $request){
+
+    $validator = \Validator::make($request->all(), [
+            'scan_hasil_uji' => 'required|file|mimes:pdf|max:7000', // max 7MB
+        ], [
+          'scan_hasil_uji.required' => 'hasil_laporan belum dipilih',
+          'scan_hasil_uji.file' => 'hasil_laporan bukan file',
+          'scan_hasil_uji.mimes' => 'hasil_laporan bukan pdf',
+          'scan_hasil_uji.max' => 'ukuran hasil_laporan melewati 7MB'
+        ]);
+
+    if ($validator->fails()) {
+      $final = array('message'=> $validator->errors()->first());
+      return array('status' => 0,'result'=>$final);
+    }
+
+    // bukti pembayaran
+    if($request->hasFile('scan_hasil_uji')){
+      $upload = Storage::putFile(
+          'public/lab_uji_upload/scan_hasil_uji/' ,
+          $request->file('scan_hasil_uji')
+      );
+
+      $path_url_manual_book = basename($upload);
+      $lab_uji = transaction_lab_uji_jadwal_uji::where('form_uji_id', $request->form_uji_id)->first();
+      if($lab_uji->scan_hasil_uji != null){
+        $this->delete_file(storage_path('app/public/lab_uji_upload/scan_hasil_uji/' . $lab_uji->scan_hasil_uji));
+      }
+      $lab_uji->scan_hasil_uji = $path_url_manual_book;
+      $lab_uji->save();
+
+      $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
+                                                first();
+      $lab_uji_form->status_journey = 10;
+      $lab_uji_form->save();
+
+      $tokenList = DB::table('transaction_notif_token_labs')
+                    ->where('transaction_notif_token_labs.lab_uji_id', $lab_uji_form->lab_uji_id)
+                    ->pluck('transaction_notif_token_labs.token')
+                     ->all();
+
+      app('App\Http\Controllers\General_Controller')->
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Hasil laporan telah dikirim'
+                        ,1, $tokenList );
+    }
+
+    $final = array('message'=> "upload hasil laporan berhasil");
+    return array('status' => 1,'result'=>$final);
+  }
+
+  private function delete_file($url){
+
+    if(file_exists($url)){
+      unlink($url);
+    }
   }
 }

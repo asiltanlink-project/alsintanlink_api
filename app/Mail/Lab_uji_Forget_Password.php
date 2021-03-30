@@ -2,25 +2,24 @@
 
 namespace App\Mail;
 
-use App\Models\Upja;
+use App\Models\lab_uji;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class Upja_Alert extends Mailable
+class Lab_uji_Forget_Password extends Mailable
 {
     use Queueable, SerializesModels;
-    public $upja;
+    public $lab_uji;
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(Upja $upja)
+    public function __construct(lab_uji $lab_uji)
     {
-        $this->upja = $upja;
-
+        $this->lab_uji = $lab_uji;
     }
 
     /**
@@ -30,7 +29,6 @@ class Upja_Alert extends Mailable
      */
     public function build()
     {
-        // dd('sa');
-        return $this->subject('Peringatan Upja')->from('alsintanlink@gmail.com')->view('email.upja_alert');
+        return $this->subject('Forget Password')->from('alsintanlink@gmail.com')->view('email.lab_uji_forget_password');
     }
 }

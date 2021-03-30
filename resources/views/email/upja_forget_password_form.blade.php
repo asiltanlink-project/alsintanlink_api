@@ -221,7 +221,7 @@ function submit_reset_password( )
     // formData.append("pencipta", document.querySelector('#pencipta').value);
     //
     const data = {
-        upja_id: upja_id,
+        token: upja_id,
         password: new_password
      };
     fetch('https://alsintanlink.com/api/upja/change_password',{
@@ -231,11 +231,18 @@ function submit_reset_password( )
                 },
                 body : JSON.stringify(data),
     })
-    .then(res => {
-      window.location.replace("https://alsintanlink.com/general/upja_forget_password_succsess");
+    .then(response => response.json())
+    .then(data => {
+      console.log('Success:', data);
+      if(data.status == 1){
+         window.location.replace("https://alsintanlink.com/general/upja_forget_password_succsess");
+       }else{
+         alert( data.result.message);
+       }
     })
-    .then(teks => console.log(teks))
-    .catch(err => console.log(err));
+    .catch((error) => {
+      console.error('Error:', error);
+    });
 }</script>
 
 </html>

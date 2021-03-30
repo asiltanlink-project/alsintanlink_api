@@ -21,4 +21,6 @@ class lab_uji extends Authenticatable implements JWTSubject
    {
        return [];
    }
+
+
 }

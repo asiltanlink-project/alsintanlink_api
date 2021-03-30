@@ -120,7 +120,7 @@
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                     <tr>
                         <td bgcolor="#ffffff" align="center" valign="top" style="padding: 40px 20px 20px 20px; border-radius: 4px 4px 0px 0px; color: #111111; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 48px; font-weight: 400; letter-spacing: 4px; line-height: 48px;">
-                            <h1 style="font-size: 48px; font-weight: 400; margin: 2;">Forget Password</h1> <img src=" https://img.icons8.com/clouds/100/000000/handshake.png" width="125" height="120" style="display: block; border: 0px;" />
+                            <h1 style="font-size: 48px; font-weight: 400; margin: 2;">Forget Password</h1> <img src="http://alsintanlink-api.litbang.pertanian.go.id/img/handshake.png" width="125" height="120" style="display: block; border: 0px;" />
                         </td>
                     </tr>
                 </table>
@@ -131,31 +131,17 @@
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                     <tr>
                         <td bgcolor="#ffffff" align="center" style="padding: 20px 30px 40px 30px; color: #666666; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 25px;">
-                            <p style="margin: 0;">Silahkan isi password baru anda</p>
+                            <p style="margin: 0;">Anda telah meminta untuk forget password. Silahkan klik link di bawah ini untuk mengganti password </p>
                         </td>
                     </tr>
                     <tr>
-                        <td bgcolor="#ffffff" align="center">
+                        <td bgcolor="#ffffff" align="left">
                             <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                              <div class="row">
-                              <div class="col-sm-4">
-                                 <label>New Password</label>
-                                  <div class="form-group pass_show">
-                                      <input type="password" id="new_password" value="" class="form-control" placeholder="New Password">
-                                  </div>
-                                 <label>Confirm Password</label>
-                                  <div class="form-group pass_show">
-                                      <input type="password" id="confirm_password" value="" class="form-control" placeholder="Confirm Password">
-                                  </div>
-                                </div>
-                              </div>
                                 <tr>
                                     <td bgcolor="#ffffff" align="center" style="padding: 20px 30px 60px 30px;">
                                         <table border="0" cellspacing="0" cellpadding="0">
                                             <tr>
-                                                <td align="center" style="border-radius: 3px;" bgcolor="#FFA73B">
-                                                  <button onclick="submit_reset_password()" token='{{$token}}'>Click me</button>
-                                                </td>
+                                                <td align="center" style="border-radius: 3px;" bgcolor="#FFA73B"><a href="http://alsintanlink-api.litbang.pertanian.go.id/general/lab_uji_forget_password_form/{{$lab_uji->id}}"  target="_blank" style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 15px 25px; border-radius: 2px; border: 1px solid #FFA73B; display: inline-block;">Confirm Account</a></td>
                                             </tr>
                                         </table>
                                     </td>
@@ -192,57 +178,5 @@
         </tr>
     </table>
 </body>
-<script>
-
-document.querySelector('#tambah').addEventListener('click',function(e)
-{
-    jsRESTClientPOST();
-});
-
-function submit_reset_password( )
-{
-
-    // let formData = new FormData();
-    var new_password = document.getElementById("new_password").value;
-    var confirm_password = document.getElementById("confirm_password").value;
-    let token = event.target.getAttribute('token');
-    console.log(new_password);
-    console.log(confirm_password);
-
-    if(new_password == ""){
-      alert('New Password kosong');
-    }else if(confirm_password == ""){
-      alert('Confirm Password kosong');
-    }
-    else if(new_password != confirm_password){
-      alert('Password tidak sama');
-    }
-    // formData.append("judul", document.querySelector('#New Password').value);
-    // formData.append("pencipta", document.querySelector('#pencipta').value);
-    //
-    const data = {
-        token: token,
-        password: new_password
-     };
-    fetch('http://alsintanlink-api.litbang.pertanian.go.id/api/farmer/forget_change_password',{
-                method : 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body : JSON.stringify(data),
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Success:', data);
-      if(data.status == 1){
-         window.location.replace("http://alsintanlink-api.litbang.pertanian.go.id/general/farmer_forget_password_succsess");
-       }else{
-         alert( data.result.message);
-       }
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
-}</script>
 
 </html>

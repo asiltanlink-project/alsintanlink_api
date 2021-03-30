@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Hash;
 use Config;
 use JWTAuth;
+use Carbon\Carbon;
 use App\Models\Upja;
 use App\Models\Alsin;
 use App\Models\Farmer;
@@ -14,6 +15,7 @@ use App\Models\Alsin_type;
 use Illuminate\Http\Request;
 use App\Models\Transaction_order;
 use Illuminate\Support\Facades\DB;
+use App\Models\token_forget_farmer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Transaction_order_type;
@@ -33,6 +35,9 @@ use App\Models\Upja_Ownership\transaction_upja_training;
 use App\Models\Upja_Ownership\transaction_upja_rice_seed;
 use App\Models\Upja_Ownership\transaction_upja_reparation;
 use App\Models\Upja_Ownership\trasansaction_upja_spare_part;
+
+use App\Models\spare_part;
+use App\Models\spare_part_type;
 
 class Farmer_Controller extends Controller
 {
@@ -91,7 +96,7 @@ class Farmer_Controller extends Controller
               $notif->save();
 
              $fixed_user = Farmer::select('id','phone_verify','phone_number')->find($user->id);
-             $final = array('message' => 'login sukses','token' => $token ,'farmer' => $fixed_user,
+             $final = array('message' => 'login berhasil','token' => $token ,'farmer' => $fixed_user,
                             'device_id' => $notif->device_id);
 
              return array('status' => 1, 'result' => $final);
@@ -124,7 +129,7 @@ class Farmer_Controller extends Controller
             $results = json_decode(curl_exec($curlHandle), true);
             curl_close($curlHandle);
 
-            $final = array('message'=>"gagal login belum verif", 'otp_code' => $user->otp_code);
+            $final = array('message'=>"gagal karena login belum verif", 'otp_code' => $user->otp_code);
             return array('status' => 2,'result' => $final) ;
           }
       }else{
@@ -205,7 +210,7 @@ class Farmer_Controller extends Controller
     $results = json_decode(curl_exec($curlHandle), true);
     curl_close($curlHandle);
 
-    $final = array('message'=>'register succsess', 'otp_code'=>$blog->otp_code,'farmer'=>$blog);
+    $final = array('message'=>'register berhasil', 'otp_code'=>$blog->otp_code,'farmer'=>$blog);
     return array('status' => 1,'result'=>$final);
   }
 
@@ -215,13 +220,13 @@ class Farmer_Controller extends Controller
                     ->first();
 
     if($user == null){
-      $final = array('message'=> "farmer not found");
+      $final = array('message'=> "farmer tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $user->phone_verify = 1;
     $user->save();
 
-    $final = array('message'=>'submit otp succsess');
+    $final = array('message'=>'submit otp berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -231,13 +236,13 @@ class Farmer_Controller extends Controller
                     ->first();
 
     if($user == null){
-      $final = array('message'=> "farmer not found");
+      $final = array('message'=> "farmer tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $user->otp_code = null;
     $user->save();
 
-    $final = array('message'=>'reset otp succsess');
+    $final = array('message'=>'reset otp berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -247,7 +252,7 @@ class Farmer_Controller extends Controller
                     ->first();
     // dd(env("zenziva_userkey"));             ;
     if($user == null){
-      $final = array('message'=> "farmer not found");
+      $final = array('message'=> "farmer tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $digits = 4; // Amount of digits
@@ -277,7 +282,7 @@ class Farmer_Controller extends Controller
     $results = json_decode(curl_exec($curlHandle), true);
     curl_close($curlHandle);
 
-    $final = array('message'=>'resend otp succsess','otp_code'=>$user->otp_code);
+    $final = array('message'=>'resend otp berhasil','otp_code'=>$user->otp_code);
     return array('status' => 1,'result'=>$final);
   }
 
@@ -286,7 +291,7 @@ class Farmer_Controller extends Controller
     $check_district = Helper::check_village($request->village_id);
 
     if($check_district == null){
-      $final = array('message'=> "district not found");
+      $final = array('message'=> "kecamatan tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -334,100 +339,128 @@ class Farmer_Controller extends Controller
                             ,'alsin_types.alsin_other','alsins.cost','alsin_types.picture_detail')
                       ->get();
 
-    $rice = transaction_order_rice::select('alsin_types.id as alsin_type_id',
-                                           'alsin_types.alsin_other','alsin_types.name as name',
-                                           'alsin_types.picture as alsin_type_picture',
-                                           'alsin_types.picture_detail as alsins_picture'
-                                                 )
-                                      ->Join ('alsin_types', 'alsin_types.id', '=',
-                                              'transaction_order_rices.alsin_type_id')
-                                      ->Join ('transaction_orders', 'transaction_orders.id', '=',
-                                              'transaction_order_rices.transaction_order_id')
-                                      ->where('transaction_orders.upja_id',
-                                            $request->upja_id)
-                                      ->limit(1)
-                                      ->get();
+    // $rice = transaction_order_rice::select('alsin_types.id as alsin_type_id',
+    //                                        'alsin_types.alsin_other','alsin_types.name as name',
+    //                                        'alsin_types.picture as alsin_type_picture',
+    //                                        'alsin_types.picture_detail as alsins_picture'
+    //                                              )
+    //                                   ->Join ('alsin_types', 'alsin_types.id', '=',
+    //                                           'transaction_order_rices.alsin_type_id')
+    //                                   ->Join ('transaction_orders', 'transaction_orders.id', '=',
+    //                                           'transaction_order_rices.transaction_order_id')
+    //                                   ->where('transaction_orders.upja_id',
+    //                                         $request->upja_id)
+    //                                   ->limit(1)
+    //                                   ->get();
 
-    $rice_seed = transaction_order_rice_seed::select('alsin_types.id as alsin_type_id',
-                                           'alsin_types.alsin_other','alsin_types.name as name',
-                                           'alsin_types.picture as alsin_type_picture',
-                                           'alsin_types.picture_detail as alsins_picture'
-                                                 )
-                                      ->Join ('alsin_types', 'alsin_types.id', '=',
-                                              'transaction_order_rice_seeds.alsin_type_id')
-                                      ->Join ('transaction_orders', 'transaction_orders.id', '=',
-                                              'transaction_order_rice_seeds.transaction_order_id')
-                                      ->where('transaction_orders.upja_id',
-                                            $request->upja_id)
-                                      ->limit(1)
-                                      ->get();
+    $other_service = DB::table('alsins')
+                ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                ->select('alsin_types.id as alsin_type_id',
+                          'alsin_types.alsin_other','alsin_types.name as name',
+                          'alsin_types.picture as alsin_type_picture',
+                          'alsin_types.picture_detail as alsins_picture' )
+              ->Where('upjas.id', $request->upja_id )
+              // ->Where('alsin_types.id' , 10 )
+              ->Where('alsin_types.alsin_other' , 1 )
+              ->groupBy('alsin_types.id')
+              // ->limit(1)
+              ->get();
 
+    // $rice = DB::table('alsins')
+    //             ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+    //             ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+    //             ->select('alsin_types.id as alsin_type_id',
+    //                       'alsin_types.alsin_other','alsin_types.name as name',
+    //                       'alsin_types.picture as alsin_type_picture',
+    //                       'alsin_types.picture_detail as alsins_picture' )
+    //           ->Where('upjas.id', $request->upja_id )
+    //           // ->Where('alsin_types.id' , 10 )
+    //           ->Where('alsin_types.alsin_other' , 1 )
+    //           ->groupBy('alsin_types.id')
+    //           // ->limit(1)
+    //           ->get();
 
-    $rmu = transaction_order_rmu::select('alsin_types.id as alsin_type_id',
-                                           'alsin_types.alsin_other','alsin_types.name as name',
-                                           'alsin_types.picture as alsin_type_picture',
-                                           'alsin_types.picture_detail as alsins_picture'
-                                                 )
-                                     ->Join ('alsin_types', 'alsin_types.id', '=',
-                                            'transaction_order_rmus.alsin_type_id')
-                                      ->Join ('transaction_orders', 'transaction_orders.id', '=',
-                                              'transaction_order_rmus.transaction_order_id')
-                                      ->where('transaction_orders.upja_id',
-                                            $request->upja_id)
-                                     ->limit(1)
-                                     ->get();
-
-
-
-    $reparation = transaction_order_reparation::
-                                    select('alsin_types.id as alsin_type_id',
-                                           'alsin_types.alsin_other','alsin_types.name as name',
-                                           'alsin_types.picture as alsin_type_picture',
-                                           'alsin_types.picture_detail as alsins_picture'
-                                                 )
-                                      ->Join ('alsin_types', 'alsin_types.id', '=',
-                                              'transaction_order_reparations.alsin_type_order_id')
-                                      ->Join ('transaction_orders', 'transaction_orders.id', '=',
-                                              'transaction_order_reparations.transaction_order_id')
-                                      ->where('transaction_orders.upja_id',
-                                            $request->upja_id)
-                                      ->limit(1)
-                                      ->get();
-
-    $training = transaction_order_training::
-                                    select('alsin_types.id as alsin_type_id',
-                                           'alsin_types.alsin_other','alsin_types.name as name',
-                                           'alsin_types.picture as alsin_type_picture',
-                                           'alsin_types.picture_detail as alsins_picture'
-                                                 )
-                                    ->Join ('alsin_types', 'alsin_types.id', '=',
-                                            'transaction_order_trainings.alsin_type_id')
-                                    ->Join ('transaction_orders', 'transaction_orders.id', '=',
-                                            'transaction_order_trainings.transaction_order_id')
-                                    ->where('transaction_orders.upja_id',
-                                          $request->upja_id)
-                                    ->limit(1)
-                                    ->get();
+    // $rice_seed = transaction_order_rice_seed::select('alsin_types.id as alsin_type_id',
+    //                                        'alsin_types.alsin_other','alsin_types.name as name',
+    //                                        'alsin_types.picture as alsin_type_picture',
+    //                                        'alsin_types.picture_detail as alsins_picture'
+    //                                              )
+    //                                   ->Join ('alsin_types', 'alsin_types.id', '=',
+    //                                           'transaction_order_rice_seeds.alsin_type_id')
+    //                                   ->Join ('transaction_orders', 'transaction_orders.id', '=',
+    //                                           'transaction_order_rice_seeds.transaction_order_id')
+    //                                   ->where('transaction_orders.upja_id',
+    //                                         $request->upja_id)
+    //                                   ->limit(1)
+    //                                   ->get();
 
 
-    $spare_part = transaction_order_spare_part::
-                                      select('alsin_types.id as alsin_type_id',
-                                             'alsin_types.alsin_other','alsin_types.name as name',
-                                             'alsin_types.picture as alsin_type_picture',
-                                             'alsin_types.picture_detail as alsins_picture'
-                                                   )
-                                      ->Join ('alsin_types', 'alsin_types.id', '=',
-                                              'transaction_order_spare_parts.alsin_type_id')
-                                      ->Join ('transaction_orders', 'transaction_orders.id', '=',
-                                              'transaction_order_spare_parts.transaction_order_id')
-                                      ->where('transaction_orders.upja_id',
-                                            $request->upja_id)
-                                      ->limit(1)
-                                      ->get();
-    $vehicles = collect();
-    $other_service = $vehicles->merge($rice)->merge($rice_seed)
-                  ->merge($rmu)
-                  ->merge($reparation)->merge($training)->merge($spare_part);
+    // $rmu = transaction_order_rmu::select('alsin_types.id as alsin_type_id',
+    //                                        'alsin_types.alsin_other','alsin_types.name as name',
+    //                                        'alsin_types.picture as alsin_type_picture',
+    //                                        'alsin_types.picture_detail as alsins_picture'
+    //                                              )
+    //                                  ->Join ('alsin_types', 'alsin_types.id', '=',
+    //                                         'transaction_order_rmus.alsin_type_id')
+    //                                   ->Join ('transaction_orders', 'transaction_orders.id', '=',
+    //                                           'transaction_order_rmus.transaction_order_id')
+    //                                   ->where('transaction_orders.upja_id',
+    //                                         $request->upja_id)
+    //                                 //  -?groupBy('')
+    //                                  ->get();
+
+
+
+    // $reparation = transaction_order_reparation::
+    //                                 select('alsin_types.id as alsin_type_id',
+    //                                        'alsin_types.alsin_other','alsin_types.name as name',
+    //                                        'alsin_types.picture as alsin_type_picture',
+    //                                        'alsin_types.picture_detail as alsins_picture'
+    //                                              )
+    //                                   ->Join ('alsin_types', 'alsin_types.id', '=',
+    //                                           'transaction_order_reparations.alsin_type_order_id')
+    //                                   ->Join ('transaction_orders', 'transaction_orders.id', '=',
+    //                                           'transaction_order_reparations.transaction_order_id')
+    //                                   ->where('transaction_orders.upja_id',
+    //                                         $request->upja_id)
+    //                                   ->limit(1)
+    //                                   ->get();
+
+    // $training = transaction_order_training::
+    //                                 select('alsin_types.id as alsin_type_id',
+    //                                        'alsin_types.alsin_other','alsin_types.name as name',
+    //                                        'alsin_types.picture as alsin_type_picture',
+    //                                        'alsin_types.picture_detail as alsins_picture'
+    //                                              )
+    //                                 ->Join ('alsin_types', 'alsin_types.id', '=',
+    //                                         'transaction_order_trainings.alsin_type_id')
+    //                                 ->Join ('transaction_orders', 'transaction_orders.id', '=',
+    //                                         'transaction_order_trainings.transaction_order_id')
+    //                                 ->where('transaction_orders.upja_id',
+    //                                       $request->upja_id)
+    //                                 ->limit(1)
+    //                                 ->get();
+
+
+    // $spare_part = transaction_order_spare_part::
+    //                                   select('alsin_types.id as alsin_type_id',
+    //                                          'alsin_types.alsin_other','alsin_types.name as name',
+    //                                          'alsin_types.picture as alsin_type_picture',
+    //                                          'alsin_types.picture_detail as alsins_picture'
+    //                                                )
+    //                                   ->Join ('alsin_types', 'alsin_types.id', '=',
+    //                                           'transaction_order_spare_parts.alsin_type_id')
+    //                                   ->Join ('transaction_orders', 'transaction_orders.id', '=',
+    //                                           'transaction_order_spare_parts.transaction_order_id')
+    //                                   ->where('transaction_orders.upja_id',
+    //                                         $request->upja_id)
+    //                                   ->limit(1)
+    //                                   ->get();
+    // $vehicles = collect();
+    // $other_service = $vehicles->merge($rice)->merge($rice_seed)
+    //               ->merge($rmu)
+    //               ->merge($reparation)->merge($training)->merge($spare_part);
 
     $final = array('upja' => $upja ,'alsintans'=>$alsintan,'other_services'=>$other_service);
     return array('status' => 1 ,'result'=>$final);
@@ -439,7 +472,9 @@ class Farmer_Controller extends Controller
                        ->select('alsin_types.id as alsin_type_id','alsin_types.alsin_other'
                                 ,'alsin_types.name','alsin_types.picture as alsin_type_picture'
                                 ,'alsin_types.picture_detail as alsins_picture')
-                      ->get();
+                       ->orderBy('alsin_types.alsin_other')
+                       ->orderBy('alsin_types.id')
+                       ->get();
     $final = array('alsintans'=>$alsintan);
     return array('status' => 1 ,'result'=>$final);
   }
@@ -571,7 +606,7 @@ class Farmer_Controller extends Controller
       curl_close($curlHandle);
     }
 
-    $final = array('message'=> 'Order Succsess'  );
+    $final = array('message'=> 'Pesanan Berhasil'  );
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -590,6 +625,7 @@ class Farmer_Controller extends Controller
                                 )
                       ->Join ('upjas', 'upjas.id', '=', 'transaction_orders.upja_id')
                       ->Where('transaction_orders.farmer_id',  $user_id )
+                      ->orderBy('transaction_orders.id','desc')
                       ->groupby('transaction_orders.id', 'transaction_orders.transport_cost'
                                , 'transaction_orders.total_cost', 'transaction_orders.status'
                                , 'transaction_orders.delivery_time','transaction_orders.invoice'
@@ -629,7 +665,7 @@ class Farmer_Controller extends Controller
                                , 'transaction_orders.delivery_time', 'transaction_orders.invoice'
                                , 'transaction_orders.created_at', 'upjas.id', 'upjas.name'
                                , 'transaction_orders.latitude', 'transaction_orders.longtitude'
-                               , 'transaction_orders.full_adress',  'transaction_orders.note',)
+                               , 'transaction_orders.full_adress',  'transaction_orders.note')
                       ->first();
 
     if($transaction == null){
@@ -738,13 +774,13 @@ class Farmer_Controller extends Controller
 
       $transaction =  Transaction_order::find($request->transaction_order_id) ;
       if($transaction == null){
-        $final = array('message'=>'transaction not found');
+        $final = array('message'=>'transaction tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
       }
       $transaction->status = "Menungggu Konfirmasi Upja";
       $transaction->save();
 
-      $final = array('message'=>'succsess');
+      $final = array('message'=>'berhasil');
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -752,7 +788,7 @@ class Farmer_Controller extends Controller
 
       $transaction =  Transaction_order::find($request->transaction_order_id) ;
       if($transaction == null){
-        $final = array('message'=>'transaction not found');
+        $final = array('message'=>'transaction tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
       }
 
@@ -776,7 +812,7 @@ class Farmer_Controller extends Controller
       $transaction->status = "Petani Menolak Harga";
       $transaction->save();
 
-      $final = array('message'=>'succsess');
+      $final = array('message'=>'berhasil');
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -785,7 +821,7 @@ class Farmer_Controller extends Controller
 
       $transaction =  Transaction_order::find($request->transaction_order_id) ;
       if($transaction == null){
-        $final = array('message'=>'transaction not found');
+        $final = array('message'=>'transaction tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
       }else if($transaction->status != "Menunggu Penentuan Pembayaran" ){
         $final = array('message'=>'transaksi tidak bisa dibatalkan karena sudah berjalan');
@@ -796,7 +832,7 @@ class Farmer_Controller extends Controller
 
       $transaction->delete();
 
-      $final = array('message'=>'succsess');
+      $final = array('message'=>'berhasil');
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -816,10 +852,11 @@ class Farmer_Controller extends Controller
                               ->Join ('indoregion_regencies', 'indoregion_regencies.id', '=', 'farmers.city')
                               ->Join ('indoregion_districts', 'indoregion_districts.id', '=', 'farmers.district')
                               ->Join ('indoregion_villages', 'indoregion_villages.id', '=', 'farmers.village')
-                              ->where('farmers.id' , $user_id)->first() ;
+                              ->where('farmers.id' , $user_id)
+                              ->first() ;
 
       if($farmer == null){
-        $final = array('message'=>'farmer not found');
+        $final = array('message'=>'farmer tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
       }
 
@@ -836,7 +873,7 @@ class Farmer_Controller extends Controller
       $notif = Farmer::find($user_id);
 
       if($notif == null){
-        $final = array('message'=> 'farmer not found');
+        $final = array('message'=> 'farmer tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
       }
 
@@ -847,7 +884,7 @@ class Farmer_Controller extends Controller
       $notif->village = $request->village;
       $notif->save();
 
-      $final = array('message'=> 'update user success');
+      $final = array('message'=> 'update user berhasil');
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -859,12 +896,23 @@ class Farmer_Controller extends Controller
         return array('status' => 0,'result'=>$final);
       }
 
+      $invoice = uniqid($upja->id);
+      while (token_forget_farmer::where('token', $invoice)->first() != null) {
+          $invoice = uniqid($upja);
+      }
+
+      $token_forget = new token_forget_farmer;
+      $token_forget->farmer_id = $upja->id;
+      $token_forget->token = $invoice;
+      $token_forget->expired_at = Carbon::now()->addHours(1);
+      $token_forget->save();
+
       // send otp
       $userkey = 'd27a72ddaf0b';
       $passkey = '4ba83675fd17f25c721dbb6d';
       $telepon = $request->phone_number;
       $message = 'Anda meminta untuk melakukan reset password. silahkan klik link berikut ' .
-                 'http://alsintanlink.com/general/farmer_forget_form/' . $upja->id;
+                 'https://alsintanlink.com/general/farmer_forget_form/' . $token_forget->token;
       $url = 'https://console.zenziva.net/reguler/api/sendsms/';
       $curlHandle = curl_init();
       curl_setopt($curlHandle, CURLOPT_URL, $url);
@@ -883,22 +931,38 @@ class Farmer_Controller extends Controller
       $results = json_decode(curl_exec($curlHandle), true);
       curl_close($curlHandle);
 
-      $final = array('message'=>'Forget Password Succsess');
+      $final = array('message'=>'Forget Password berhasil');
       return array('status' => 1,'result'=>$final);
     }
 
     public function forget_change_password(Request $request)
     {
 
-      $alsins = Farmer::find($request->farmer_id);
-      if($alsins == null){
-        $final = array('message'=> "upja not found");
-        return array('status' => 0 ,'result'=>$final);
+      $token_forget = token_forget_farmer::where('token' , $request->token)->first();
+      if($token_forget == null){
+        $final = array('message'=>'token tidak terdaftar');
+        return array('status' => 0,'result'=>$final);
       }
+
+      if($token_forget->is_done == 1  ){
+        $final = array('message'=>'token sudah dipakai! Silahkan ulangi forget password');
+        return array('status' => 0,'result'=>$final);
+      }
+
+      $mytime = Carbon::now();
+      if($token_forget->expired_at < $mytime->toDateTimeString()  ){
+        $final = array('message'=>'token expired! Silahkan ulangi forget password');
+        return array('status' => 0,'result'=>$final);
+      }
+
+      $token_forget->is_done = 1;
+      $token_forget->save();
+
+      $alsins = Farmer::find($token_forget->farmer_id);
       $alsins->password = Hash::make($request->password);
       $alsins->save();
 
-      $final = array('message'=> "change password succsess");
+      $final = array('message'=> "change password berhasil");
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -910,7 +974,7 @@ class Farmer_Controller extends Controller
     public function farmer_forget_form(Request $request){
 
       $farmer = Farmer::find($request->farmer_id);
-      return view('email/farmer_forget_password_form',['farmer_id' => $request->farmer_id]);
+      return view('email/farmer_forget_password_form',['token' => $request->token]);
     }
 
     public function show_upja_raparation(Request $request){
@@ -975,14 +1039,14 @@ class Farmer_Controller extends Controller
                                       ->where('device_id', $request->device_id)
                                       ->first();
       if($notif == null){
-        $final = array('message'=> 'device not found');
+        $final = array('message'=> 'device tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
       }
 
       $notif->token = $request->token;
       $notif->save();
 
-      $final = array('message'=> 'update token success');
+      $final = array('message'=> 'update token berhasil');
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -996,12 +1060,12 @@ class Farmer_Controller extends Controller
                                       ->where('device_id', $request->device_id)
                                       ->first();
       if($notif == null){
-        $final = array('message'=> 'device not found');
+        $final = array('message'=> 'device tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
       }
       $notif->delete();
 
-      $final = array('message'=> 'delete token success');
+      $final = array('message'=> 'delete token berhasil');
       return array('status' => 1 ,'result'=>$final);
     }
 
@@ -1031,4 +1095,72 @@ class Farmer_Controller extends Controller
         return array('status' => 0 ,'result'=>$final);
       }
     }
+
+    public function show_alsin_type(Request $request ){
+
+       $rice_seed = trasansaction_upja_spare_part::select('alsin_types.*')
+                    ->where('alsin_types.alsin_other',0)
+                    ->where('trasansaction_upja_spare_parts.upja_id',$request->upja_id)
+                    ->Join ('spare_parts', 'spare_parts.id', '=',
+                           'trasansaction_upja_spare_parts.spare_part_id')
+                    ->Join ('spare_part_types', 'spare_part_types.id', '=',
+                           'spare_parts.spare_part_type_id')
+                    ->Join ('alsin_types', 'alsin_types.id', '=',
+                          'spare_part_types.alsin_type_id')
+                    ->get();
+
+       $final = array('alsin_types'=>$rice_seed);
+       return array('status' => 1 ,'result'=>$final);
+    }
+
+    public function show_spare_part_type(Request $request ){
+
+      $rice_seed = trasansaction_upja_spare_part::select('spare_part_types.*')
+                   ->where('alsin_types.alsin_other',0)
+                   ->where('spare_part_types.alsin_type_id',$request->alsin_type_id)
+                   ->where('trasansaction_upja_spare_parts.upja_id',$request->upja_id)
+                   ->Join ('spare_parts', 'spare_parts.id', '=',
+                          'trasansaction_upja_spare_parts.spare_part_id')
+                   ->Join ('spare_part_types', 'spare_part_types.id', '=',
+                          'spare_parts.spare_part_type_id')
+                   ->Join ('alsin_types', 'alsin_types.id', '=',
+                         'spare_part_types.alsin_type_id')
+                   ->get();
+
+       $final = array('spare_part_types'=>$rice_seed);
+       return array('status' => 1 ,'result'=>$final);
+    }
+
+  public function show_spare_part_search(Request $request ){
+
+      if($request->key_search == null){
+        $rice_seed = trasansaction_upja_spare_part::select('spare_parts.*')
+                       ->where('alsin_types.alsin_other',0)
+                       ->where('spare_parts.spare_part_type_id',$request->spare_part_type_id)
+                       ->where('trasansaction_upja_spare_parts.upja_id',$request->upja_id)
+                       ->Join ('spare_parts', 'spare_parts.id', '=',
+                              'trasansaction_upja_spare_parts.spare_part_id')
+                       ->Join ('spare_part_types', 'spare_part_types.id', '=',
+                              'spare_parts.spare_part_type_id')
+                       ->Join ('alsin_types', 'alsin_types.id', '=',
+                             'spare_part_types.alsin_type_id')
+                       ->get();
+      }else{
+         $rice_seed = trasansaction_upja_spare_part::select('spare_parts.*')
+                        ->where('alsin_types.alsin_other',0)
+                        ->where('spare_parts.spare_part_type_id',$request->spare_part_type_id)
+                        ->where('trasansaction_upja_spare_parts.upja_id',$request->upja_id)
+                        ->where('spare_parts.name', 'like', '%' . $request->key_search . '%')
+                        ->Join ('spare_parts', 'spare_parts.id', '=',
+                               'trasansaction_upja_spare_parts.spare_part_id')
+                        ->Join ('spare_part_types', 'spare_part_types.id', '=',
+                               'spare_parts.spare_part_type_id')
+                        ->Join ('alsin_types', 'alsin_types.id', '=',
+                              'spare_part_types.alsin_type_id')
+                        ->get();
+      }
+
+     $final = array('spare_parts'=>$rice_seed);
+     return array('status' => 1 ,'result'=>$final);
+  }
 }

@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Hash;
 use Config;
 use JWTAuth;
+use Carbon\Carbon;
 use App\Models\Upja;
 use App\Models\Alsin;
 use App\Mail\Upja_Verif;
 use App\Models\Alsin_item;
 use Illuminate\Http\Request;
+use App\Models\token_forget_upja;
 use App\Models\Transaction_order;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -79,7 +81,7 @@ class Upja_Controller extends Controller
 
              $fixed_user = Upja::select('id','email_verify','email')->find($user->id);
 
-             $final = array('message' => 'login sukses','token' => $token, 'upja' => $fixed_user);
+             $final = array('message' => 'login berhasil','token' => $token, 'upja' => $fixed_user);
              return array('status' => 1, 'result' => $final);
           }else{
 
@@ -193,7 +195,7 @@ class Upja_Controller extends Controller
       curl_close($curlHandle);
     }
 
-    $final = array('message'=>'register succsess', 'otp_code'=>$blog->otp_code, 'upja'=>$blog);
+    $final = array('message'=>'register berhasil', 'otp_code'=>$blog->otp_code, 'upja'=>$blog);
     return array('status' => 1,'result'=>$final);
   }
 
@@ -316,13 +318,13 @@ class Upja_Controller extends Controller
                     ->first();
 
     if($user == null){
-      $final = array('message'=> "upja not found");
+      $final = array('message'=> "upja tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $user->email_verify = 1;
     $user->save();
 
-    $final = array('message'=>'submit otp succsess');
+    $final = array('message'=>'submit otp berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -332,13 +334,13 @@ class Upja_Controller extends Controller
                     ->first();
 
     if($user == null){
-      $final = array('message'=> "upja not found");
+      $final = array('message'=> "upja tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $user->otp_code = null;
     $user->save();
 
-    $final = array('message'=>'reset otp succsess');
+    $final = array('message'=>'reset otp berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -348,7 +350,7 @@ class Upja_Controller extends Controller
                     ->first();
     // dd(env("zenziva_userkey"));             ;
     if($user == null){
-      $final = array('message'=> "upja not found");
+      $final = array('message'=> "upja tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $digits = 4; // Amount of digits
@@ -392,7 +394,19 @@ class Upja_Controller extends Controller
 
     if(filter_var($request->email, FILTER_VALIDATE_EMAIL)){
         //send email
-        Mail::to($request->email)->send(new Upja_Forget_Password($upja));
+
+        $invoice = uniqid($upja->id);
+        while (token_forget_upja::where('token', $invoice)->first() != null) {
+            $invoice = uniqid($upja);
+        }
+
+        $token_forget = new token_forget_upja;
+        $token_forget->upja_id = $upja->id;
+        $token_forget->token = $invoice;
+        $token_forget->expired_at = Carbon::now()->addHours(1);
+        $token_forget->save();
+
+        Mail::to($request->email)->send(new Upja_Forget_Password($upja, $token_forget));
     }else  if(preg_match('/^[0-9]{3,15}+$/', $request->email)){
 
       // send otp
@@ -420,7 +434,7 @@ class Upja_Controller extends Controller
       curl_close($curlHandle);
     }
 
-    $final = array('message'=>'Forger Password Succsess');
+    $final = array('message'=>'Forger Password Berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -439,8 +453,8 @@ class Upja_Controller extends Controller
 
   public function upja_forget_form(Request $request){
 
-    $upja = Upja::find($request->upja_id);
-    return view('email/upja_forget_password_form',['upja_id' => $request->upja_id]);
+    $upja = token_forget_upja::where('token' , $request->token)->first();
+    return view('email/upja_forget_password_form',['upja_id' => $upja->token]);
   }
   public function upja_forget_password_succsess(Request $request){
 
@@ -558,6 +572,10 @@ class Upja_Controller extends Controller
       $upja->combineHarvester = 1;
     }else if($alsin_type_id == 7){
       $upja->dryer = 1;
+    }else if($alsin_type_id == 14){
+      $upja->powerThresher = 1;
+    }else if($alsin_type_id == 15){
+      $upja->cornSheller = 1;
     }
   }
 
@@ -670,6 +688,8 @@ class Upja_Controller extends Controller
     $this->update_reparation($request->powerWeeder ,$user_id , 5 );
     $this->update_reparation($request->combineHarvester ,$user_id , 6 );
     $this->update_reparation($request->dryer ,$user_id , 7 );
+    $this->update_reparation($request->powerThresher ,$user_id , 14 );
+    $this->update_reparation($request->cornSheller ,$user_id , 15 );
 
     // training
     $this->update_training($request->trainingOperator ,$user_id , 1 );
@@ -723,7 +743,7 @@ class Upja_Controller extends Controller
       }
     }
 
-    $final = array('message'=>'insert succsess');
+    $final = array('message'=>'memasukkan alsin berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -827,7 +847,7 @@ class Upja_Controller extends Controller
 
     $alsin = Alsin::find($request->alsin_id);
     if($alsin == null){
-      $final = array('message'=>'alsin item not found');
+      $final = array('message'=>'alsin item tidak ditemukan');
       return array('status' => 0,'result'=>$final);
     }
     if($alsin->upja_id != $user_id){
@@ -837,7 +857,7 @@ class Upja_Controller extends Controller
     $alsin->cost = $request->cost;
     $alsin->save();
 
-    $final = array('message'=>'update succsess');
+    $final = array('message'=>'mengubah alsin berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -866,7 +886,7 @@ class Upja_Controller extends Controller
     $alsin->description = $request->description;
     $alsin->save();
 
-    $final = array('message'=>'update succsess');
+    $final = array('message'=>'mengubah berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -878,7 +898,7 @@ class Upja_Controller extends Controller
 
     $alsin = Alsin::find($request->alsin_id);
     if($alsin == null){
-      $final = array('message'=>'alsin not found');
+      $final = array('message'=>'alsin tidak ditemukan');
       return array('status' => 0,'result'=>$final);
     }
     if($alsin->upja_id != $user_id){
@@ -887,7 +907,7 @@ class Upja_Controller extends Controller
     }
     $alsin->delete();
 
-    $final = array('message'=>'delete succsess');
+    $final = array('message'=>'menghapus berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -903,7 +923,7 @@ class Upja_Controller extends Controller
                         ->first();
 
     if($alsin == null){
-      $final = array('message'=>'alsin item not found');
+      $final = array('message'=>'alsin item tidak ditemukan');
       return array('status' => 0,'result'=>$final);
     }
     if($alsin->upja_id != $user_id){
@@ -914,7 +934,7 @@ class Upja_Controller extends Controller
     $alsin = Alsin_item::find( $request->alsin_item_id);
     $alsin->delete();
 
-    $final = array('message'=>'delete succsess');
+    $final = array('message'=>'menghapus berhasil');
     return array('status' => 1,'result'=>$final);
   }
 
@@ -939,6 +959,7 @@ class Upja_Controller extends Controller
                                  , 'transaction_orders.delivery_time'
                                  , 'transaction_orders.created_at', 'farmers.id', 'farmers.name'
                                  , 'transaction_orders.status')
+                        ->orderBy('transaction_orders.id' , 'desc')
                         ->paginate(10);
 
     }else{
@@ -957,6 +978,7 @@ class Upja_Controller extends Controller
                                  , 'transaction_orders.delivery_time'
                                  , 'transaction_orders.created_at', 'farmers.id', 'farmers.name'
                                  , 'transaction_orders.status')
+                        ->orderBy('transaction_orders.id' , 'desc')
                         ->paginate(10);
     }
 
@@ -1071,7 +1093,7 @@ class Upja_Controller extends Controller
 
     $transaction = Transaction_order::find($request->transaction_order_id);
     if($transaction == null){
-      $final = array('message'=> 'transaction not found');
+      $final = array('message'=> 'transaction tidak ditemukan');
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -1081,6 +1103,12 @@ class Upja_Controller extends Controller
                    ->all();
 
     if($request->status == 'Menunggu Konfirmasi Petani'){
+
+      $Validate_Order = $this->Validate_Order($request);
+      if($Validate_Order != 'true'){
+        $final = array('message'=> $Validate_Order);
+        return array('status' => 0 ,'result'=>$final);
+      }
 
       $transaction->transport_cost = $request->transport_cost;
       $total_cost = 0;
@@ -1108,7 +1136,7 @@ class Upja_Controller extends Controller
 
       for($i = 0 ; $i < sizeof ($request['rmus'])  ; $i ++){
 
-          $transaction_order_rmu = transaction_order_rmu::find($request['rmus'][$i]['id']);  ;
+          $transaction_order_rmu = transaction_order_rmu::find($request['rmus'][$i]['id']);  
           $transaction_order_rmu->cost = $request['rmus'][$i]['cost'];
           $transaction_order_rmu->save();
 
@@ -1212,8 +1240,47 @@ class Upja_Controller extends Controller
     $transaction->status = $request->status;
     $transaction->save();
 
-    $final = array('message'=> 'update succsess');
+    $final = array('message'=> 'mengubah status berhasil');
     return array('status' => 1 ,'result'=>$final);
+  }
+
+  function Validate_Order(Request $request){  
+    
+    $transaction_type = Transaction_order_type::where('transaction_order_id' ,$request->transaction_order_id)->get();
+    if(sizeof($transaction_type) > sizeof ($request['alsin_items'])  ){
+      return 'Alsin belum ditentukan harga';
+    }
+
+    $transaction_order_rmu = transaction_order_rmu::where('transaction_order_id' ,$request->transaction_order_id)->get();
+    if(sizeof($transaction_order_rmu) > sizeof ($request['rmus'])  ){
+      return 'RMU belum ditentukan harga';
+    }
+
+    $transaction_order_rice = transaction_order_rice::where('transaction_order_id' ,$request->transaction_order_id)->get();
+    if(sizeof($transaction_order_rice) > sizeof ($request['rice'])  ){
+      return 'Bibit Padi belum ditentukan harga';
+    }
+
+    $transaction_order_training = transaction_order_training::where('transaction_order_id' ,$request->transaction_order_id)->get();
+    if(sizeof($transaction_order_training) > sizeof ($request['training'])  ){
+      return 'Pelatihan belum ditentukan harga';
+    }
+
+    $transaction_order_reparation = transaction_order_reparation::where('transaction_order_id' ,$request->transaction_order_id)->get();
+    if(sizeof($transaction_order_reparation) > sizeof ($request['reparation'])  ){
+      return 'Reparasi belum ditentukan harga';
+    }
+
+    $transaction_order_rice_seed = transaction_order_rice_seed::where('transaction_order_id' ,$request->transaction_order_id)->get();
+    if(sizeof($transaction_order_rice_seed) > sizeof ($request['rice_seed'])  ){
+      return 'Benih padi belum ditentukan harga';
+    }
+
+    $transaction_order_spare_part = transaction_order_spare_part::where('transaction_order_id' ,$request->transaction_order_id)->get();
+    if(sizeof($transaction_order_spare_part) > sizeof ($request['spare_part'])  ){
+      return 'Spare part belum ditentukan harga';
+    }
+    return 'true';
   }
 
   public function show_all_alsin_type()
@@ -1234,7 +1301,7 @@ class Upja_Controller extends Controller
                                   ,'transaction_orders.total_cost', 'transaction_orders.status'
                                   , 'transaction_orders.latitude', 'transaction_orders.longtitude'
                                   , 'transaction_orders.full_adress', 'transaction_orders.longtitude'
-                                  , 'transaction_orders.latitude'
+                                  , 'transaction_orders.latitude'  , 'transaction_orders.note'
                                   ,'upjas.id as upja_id', 'upjas.name as upja_name'
                                   ,'farmers.id as farmer_id','farmers.name as farmer_name'
                                   ,'farmers.phone_number'
@@ -1292,11 +1359,15 @@ class Upja_Controller extends Controller
 
     $alsin_item_selected = DB::table('transaction_order_children')
                      ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code',
-                              'alsin_items.description')
+                              'alsin_items.description', 'alsin_types.name as alsin_type_name'  )
                      ->Join ('transaction_order_types', 'transaction_order_types.id', '=',
                               'transaction_order_children.transaction_order_type_id')
                      ->Join ('alsin_items', 'alsin_items.id', '=',
                              'transaction_order_children.alsin_item_id')
+                     ->Join ('alsins', 'alsins.id', '=',
+                             'alsin_items.alsin_id')
+                     ->Join ('alsin_types', 'alsin_types.id', '=',
+                             'alsins.alsin_type_id')
                      ->Where('transaction_order_types.transaction_order_id',
                              $request->transaction_order_id )
                      ->paginate(10);
@@ -1393,15 +1464,31 @@ class Upja_Controller extends Controller
   public function change_password(Request $request)
   {
 
-    $alsins = upja::find($request->upja_id);
-    if($alsins == null){
-      $final = array('message'=> "upja not found");
-      return array('status' => 0 ,'result'=>$final);
+    $token_forget = token_forget_upja::where('token' , $request->token)->first();
+    if($token_forget == null){
+      $final = array('message'=>'token tidak terdaftar');
+      return array('status' => 0,'result'=>$final);
     }
+
+    if($token_forget->is_done == 1  ){
+      $final = array('message'=>'token sudah dipakai! Silahkan ulangi forget password');
+      return array('status' => 0,'result'=>$final);
+    }
+
+    $mytime = Carbon::now();
+    if($token_forget->expired_at < $mytime->toDateTimeString()  ){
+      $final = array('message'=>'token expired! Silahkan ulangi forget password');
+      return array('status' => 0,'result'=>$final);
+    }
+
+    $token_forget->is_done = 1;
+    $token_forget->save();
+
+    $alsins = Upja::find($token_forget->upja_id);
     $alsins->password = Hash::make($request->password);
     $alsins->save();
 
-    $final = array('message'=> "change password succsess");
+    $final = array('message'=> "change password berhasil");
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -1441,7 +1528,7 @@ class Upja_Controller extends Controller
 
     $check_spare_part = Helper::check_spare_part($request->spare_part_id);
     if($check_spare_part == null){
-      $final = array('message'=> "spare part not found");
+      $final = array('message'=> "spare part tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
     $spare_part_check = trasansaction_upja_spare_part::

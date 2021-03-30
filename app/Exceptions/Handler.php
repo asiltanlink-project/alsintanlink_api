@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
 
 class Handler extends ExceptionHandler
 {
@@ -46,6 +47,17 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
-        return parent::render($request, $exception);
+        if (env('APP_DEBUG') == true) {
+            return parent::render($request, $exception);
+        }
+
+        $reportCode = md5($request->ip() . date('YmdHisv'));
+        $message = "Terjadi kesalahan pada sistem. Kode laporan {$reportCode}";
+        Log::error("ReportCode:{$reportCode}\tMessage:{$exception->getMessage()}\tTrace:{$exception->getTraceAsString()}");
+        $final = array('code' => 500,'message' => $message);
+        return response()->json([
+            'status' => -1,
+            'result' => $final
+        ]);
     }
 }

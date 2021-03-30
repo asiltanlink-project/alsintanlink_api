@@ -29,7 +29,7 @@ class LogActivity
 		return lab_uji::select('lab_ujis.*',
 													 'lab_uji_company_types.name as company_type_name')->
 										where('lab_ujis.id',$lab_uji_id)->
-										join ('lab_uji_company_types', 'lab_uji_company_types.id',
+										leftjoin ('lab_uji_company_types', 'lab_uji_company_types.id',
 													'=', 'lab_ujis.company_type')->
 										first();
 	}

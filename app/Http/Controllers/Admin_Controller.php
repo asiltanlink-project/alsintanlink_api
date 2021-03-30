@@ -69,7 +69,7 @@ class Admin_Controller extends Controller
           $token = JWTAuth::attempt($credentials);
 
          $fixed_user = Admin::select('id','username')->find($user->id);
-         $final = array('message' => 'login sukses','token' => $token,'admin' => $fixed_user);
+         $final = array('message' => 'login berhasil','token' => $token,'admin' => $fixed_user);
          return array('status' => 1, 'result' => $final);
 
       }else{
@@ -87,7 +87,7 @@ class Admin_Controller extends Controller
     $check_district = Helper::check_village($request->village_id);
 
     if($check_district == null){
-      $final = array('message'=> "district not found");
+      $final = array('message'=> "kecamatan tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -125,7 +125,7 @@ class Admin_Controller extends Controller
                     ->first();
 
     if($upja == null){
-      $final = array('message'=> "upja not found");
+      $final = array('message'=> "upja tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -209,7 +209,7 @@ class Admin_Controller extends Controller
     $check_district = Helper::check_village($request->village_id);
 
     if($check_district == null){
-      $final = array('message'=> "village not found");
+      $final = array('message'=> "kecamatan tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -239,7 +239,7 @@ class Admin_Controller extends Controller
                     ->first();
 
     if($farmer == null){
-      $final = array('message'=> "farmer not found");
+      $final = array('message'=> "farmer tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -396,6 +396,62 @@ class Admin_Controller extends Controller
       }
 
       $final = array('alsin_items'=>$alsin_items,
+                     'current_page'=>$current_page,'max_page'=>$max_page);
+
+      return array('status' => 1 ,'result'=>$final);
+    }else if($request->alsin_type_id == 14 || $request->alsin_type_id == 15){
+      $alsin = DB::table('alsins')
+                         ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                         ->Join ('upjas', 'upjas.id', '=', 'alsins.upja_id')
+                         ->select('alsins.id as alsin_id','alsin_types.id as alsin_type_id'
+                                  ,'alsin_types.name as alsin_type_name','alsins.cost','alsin_types.picture_detail'
+                                  ,DB::raw("(select count(alsin_items.id)
+                                          FROM alsin_items
+                                          WHERE (alsin_items.alsin_id = alsins.id)
+                                          AND (alsin_items.status = 'Tersedia')
+                                        ) as available
+                                     ")
+                                     ,DB::raw("(select count(alsin_items.id)
+                                             FROM alsin_items
+                                             WHERE (alsin_items.alsin_id = alsins.id)
+                                             AND (alsin_items.status = 'Sedang Digunakan')
+                                           ) as not_available
+                                        ")
+                                        ,DB::raw("(select count(alsin_items.id)
+                                                FROM alsin_items
+                                                WHERE (alsin_items.alsin_id = alsins.id)
+                                                AND (alsin_items.status = 'Rusak')
+                                              ) as rusak
+                                           ")
+                                           ,DB::raw("(select (available + not_available + rusak)
+                                              ) as total_item
+                                           ")
+                                     )
+                        ->Where('upjas.id', $request->upja_id )
+                        ->Where('alsin_types.id', $request->alsin_type_id )
+                        ->groupBy('alsins.id','alsin_types.id','alsin_types.name'
+                                  ,'alsins.cost','alsin_types.picture_detail')
+                        ->first();
+
+      if($alsin == null){
+        $final = array('message'=> 'alsin tidak dimiliki upja');
+        return array('status' => 0 ,'result'=>$final);
+      }
+      $alsin_items = DB::table('alsin_items')
+                         ->select('alsin_items.id as alsin_item_id', 'alsin_items.vechile_code',
+                                  'alsin_items.description', 'alsin_items.status')
+                        ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
+                        ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
+                        ->Where('alsin_items.alsin_id',  $alsin->alsin_id )
+                        ->paginate(10);
+
+      $max_page = round($alsin_items->total() / 10);
+      $current_page =$alsin_items->currentPage();
+      if($max_page == 0){
+        $max_page = 1;
+      }
+
+      $final = array('alsin'=>$alsin, 'alsin_items'=>$alsin_items,
                      'current_page'=>$current_page,'max_page'=>$max_page);
 
       return array('status' => 1 ,'result'=>$final);
@@ -692,7 +748,7 @@ class Admin_Controller extends Controller
                                             ->get();
             break;
         default:
-        $final = array('message'=> 'alsin type not found');
+        $final = array('message'=> 'alsin type tidak ditemukan');
         return array('status' => 0 ,'result'=>$final);
         break;
       }
@@ -804,7 +860,7 @@ class Admin_Controller extends Controller
     $user_id = $fixedtoken->id;
 
     $limit_date = Carbon::now()->subDays(14)->format('Y-m-d');
-
+    // 2021-03-11 
     $transactions_all = DB::table('upjas')
                        ->select('upjas.id as upja_id','upjas.name as upja_name','upjas.email','upjas.leader_name',
                                'upjas.class','upjas.legality','indoregion_provinces.name as province',
@@ -815,9 +871,9 @@ class Admin_Controller extends Controller
                                          AND (transaction_orders.status != 'Menunggu Penentuan Pembayaran')
                                          AND (transaction_orders.status != 'Menunggu Konfirmasi Petani')
                                          AND (transaction_orders.status != 'Transaksi ditolak Upja')
-                                         AND (transaction_orders.status != 'Petani Menolak Harga')
+                                         AND (transaction_orders.status != 'Petani Menolak Harga')  
                                          AND (transaction_orders.status != 'Menungggu Konfirmasi Upja')
-                                         AND (transaction_orders.created_at <= '$limit_date')
+                                         AND (transaction_orders.created_at >= '$limit_date')
                                        ) as total_transaction
                                     ")
                                 )
@@ -828,11 +884,11 @@ class Admin_Controller extends Controller
                       ->groupby('upjas.id','upjas.name','upjas.leader_name','upjas.class',
                               'upjas.legality','indoregion_provinces.name','indoregion_regencies.name',
                               'indoregion_districts.name','upjas.email')
+                      ->orderByRaw('total_transaction asc')
                       ->orderBy('upjas.name','asc')
-                      ->orderBy('upjas.id','asc')
-                      ->orderByRaw('total_transaction','asc')
                       ->Where('upjas.province',  $request->provinces )
                       ->paginate(10);
+                      // ->get();
 
     $max_page = round($transactions_all->total() / 10);
     $current_page =$transactions_all->currentPage();
@@ -842,7 +898,8 @@ class Admin_Controller extends Controller
 
     $final = array('transactions_all'=>$transactions_all,
                    'current_page'=>$current_page,
-                   'max_page'=>$max_page);
+                   'max_page'=>$max_page
+                  );
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -862,7 +919,7 @@ class Admin_Controller extends Controller
                                          AND (transaction_orders.status != 'Transaksi ditolak Upja')
                                          AND (transaction_orders.status != 'Petani Menolak Harga')
                                          AND (transaction_orders.status != 'Menungggu Konfirmasi Upja')
-                                         AND (transaction_orders.created_at <= '$limit_date')
+                                         AND (transaction_orders.created_at >= '$limit_date')
                                        ) as total_transaction
                                     ")
                                 )
@@ -875,11 +932,12 @@ class Admin_Controller extends Controller
                               'indoregion_districts.name','upjas.email')
                       ->orderBy('upjas.name','asc')
                       ->orderBy('upjas.id','asc')
+                      ->having('total_transaction' ,0)
                       // ->orderByRaw('total_transaction','asc')
-                      ->where('upjas.id','1')
-                      ->orwhere('upjas.id','3')
+                      // ->where('upjas.id','2')
+                      // ->orwhere('upjas.id','3')
                       ->get();
-
+    
     for($i=0 ; $i < sizeof($transactions); $i++ ){
 
       if(filter_var($transactions[$i]->email, FILTER_VALIDATE_EMAIL)){
@@ -912,7 +970,7 @@ class Admin_Controller extends Controller
       }
     }
 
-    $final = array('message'=> 'send upja alert succsess');
+    $final = array('message'=> 'send upja alert berhasil');
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -962,10 +1020,18 @@ class Admin_Controller extends Controller
 
   public function import_spare_part(Request $request ){
 
-    // validasi
-    $this->validate($request, [
-      'name' => 'required|mimes:csv,xls,xlsx'
+    // upload doc
+    $validator = \Validator::make($request->all(), [
+    'name' => 'file|required|mimes:csv,xls,xlsx', // max 7MB
+    ], [
+      'name.required' => 'spare part file belum dipilih',
+      'name.file' => 'spare part file bukan file',
+      'name.mimes' => 'spare part file bukan csv / xls / xlsx',
     ]);
+
+  if ($validator->fails()) {
+      return array('status' => 0,'message'=>$validator->errors()->first()) ;
+  }
 
     // menangkap file excel
     $file = $request->file('name');
@@ -986,7 +1052,7 @@ class Admin_Controller extends Controller
 
     Excel::import(new spare_part_Excel, request()->file('name'));
 
-    $final = array('message'=> "import sukses");
+    $final = array('message'=> "import berhasil");
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -995,7 +1061,7 @@ class Admin_Controller extends Controller
     $check_alsin_type_id = Helper::check_alsin_type($request->alsin_type_id);
 
     if($check_alsin_type_id == null){
-      $final = array('message'=> "alsin type not found");
+      $final = array('message'=> "alsin type tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -1022,7 +1088,7 @@ class Admin_Controller extends Controller
     $check_alsin_type_id = Helper::check_spare_part_type($request->spare_part_type_id);
 
     if($check_alsin_type_id == null){
-      $final = array('message'=> "spare type not found");
+      $final = array('message'=> "spare type tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
 
@@ -1050,7 +1116,7 @@ class Admin_Controller extends Controller
     $spare_part->name = $request->name;
     $spare_part->save();
 
-    $final = array('message'=> "update sukses");
+    $final = array('message'=> "update berhasil");
     return array('status' => 1 ,'result'=>$final);
   }
 
@@ -1059,7 +1125,7 @@ class Admin_Controller extends Controller
     $spare_part = spare_part::find($request->spare_part_id);
     $spare_part->delete();
 
-    $final = array('message'=> "delete sukses");
+    $final = array('message'=> "delete berhasil");
     return array('status' => 1 ,'result'=>$final);
   }
 }

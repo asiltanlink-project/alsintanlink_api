@@ -154,7 +154,7 @@
                                         <table border="0" cellspacing="0" cellpadding="0">
                                             <tr>
                                                 <td align="center" style="border-radius: 3px;" bgcolor="#FFA73B">
-                                                  <button onclick="submit_reset_password()" token='{{$token}}'>Click me</button>
+                                                  <button onclick="submit_reset_password()" lab_uji_id='{{$lab_uji_id}}'>Click me</button>
                                                 </td>
                                             </tr>
                                         </table>
@@ -205,7 +205,7 @@ function submit_reset_password( )
     // let formData = new FormData();
     var new_password = document.getElementById("new_password").value;
     var confirm_password = document.getElementById("confirm_password").value;
-    let token = event.target.getAttribute('token');
+    let lab_uji_id = event.target.getAttribute('lab_uji_id');
     console.log(new_password);
     console.log(confirm_password);
 
@@ -221,28 +221,21 @@ function submit_reset_password( )
     // formData.append("pencipta", document.querySelector('#pencipta').value);
     //
     const data = {
-        token: token,
+        lab_uji_id: lab_uji_id,
         password: new_password
      };
-    fetch('http://alsintanlink-api.litbang.pertanian.go.id/api/farmer/forget_change_password',{
+    fetch('http://alsintanlink-api.litbang.pertanian.go.id/api/lab_uji/change_password',{
                 method : 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
                 body : JSON.stringify(data),
     })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Success:', data);
-      if(data.status == 1){
-         window.location.replace("http://alsintanlink-api.litbang.pertanian.go.id/general/farmer_forget_password_succsess");
-       }else{
-         alert( data.result.message);
-       }
+    .then(res => {
+      window.location.replace("http://alsintanlink-api.litbang.pertanian.go.id/general/upja_forget_password_succsess");
     })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
+    .then(teks => console.log(teks))
+    .catch(err => console.log(err));
 }</script>
 
 </html>

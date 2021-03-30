@@ -44,6 +44,17 @@ Route::group(['prefix' => 'spare_part'],function ()
   Route::get('/show_spare_part', array('middleware' => 'cors', 'uses' => 'General_Controller@show_spare_part_search' ));
 });
 
+// manual book
+Route::group(['prefix' => 'manual_book'],function ()
+{
+  // spare part
+  Route::get('/admin', array('middleware' => 'cors', 'uses' => 'General_Controller@admin' ));
+  Route::get('/upja', array('middleware' => 'cors', 'uses' => 'General_Controller@upja' ));
+  Route::get('/farmer', array('middleware' => 'cors', 'uses' => 'General_Controller@farmer' ));
+  Route::get('/master', array('middleware' => 'cors', 'uses' => 'General_Controller@master' ));
+  Route::get('/lab_uji', array('middleware' => 'cors', 'uses' => 'General_Controller@lab_uji' ));
+});
+
 
 Route::get('/show_training', array('middleware' => 'cors', 'uses' => 'General_Controller@show_training' ));
 Route::get('/show_spare_part', array('middleware' => 'cors', 'uses' => 'General_Controller@show_spare_part' ));
@@ -83,6 +94,14 @@ Route::group(['prefix' => 'farmer'],function ()
     Route::get('/show_upja_training/{upja_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_upja_training' ));
     Route::get('/show_upja_spare_part/{upja_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_upja_spare_part' ));
 
+    // spare part
+    Route::group(['prefix' => 'spare_part'],function ()
+    {
+      // spare part
+      Route::get('/show_alsin_type/{upja_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_alsin_type' ));
+      Route::get('/show_spare_part_type/{upja_id}/{alsin_type_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_spare_part_type' ));
+      Route::get('/show_spare_part/{upja_id}/{spare_part_type_id}/{key_search?}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_spare_part_search' ));
+    });
     //unused
     Route::get('/show_detail_transaction_alsin/{transaction_order_id}/{alsin_type_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_detail_transaction_alsin' ));
   });
@@ -162,19 +181,24 @@ Route::group(['prefix' => 'lab_uji'],function ()
   Route::post('/register', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@register' ));
   Route::post('/login', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@login' ));
   Route::post('/forget_password', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@forget_password' ));
+  Route::post('/change_password', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@change_password' ));
   Route::put('/update_token',array('middleware' => 'cors', 'uses' => 'lab_uji_controller@update_token' ) );
   Route::delete('/delete_token',array('middleware' => 'cors', 'uses' => 'lab_uji_controller@delete_token' ) );
 
   Route::group(['middleware' => ['assign.guard:lab_uji','jwt.lab_uji']],function ()
   {
     Route::get('/show_detail_lab_uji', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@show_detail_lab_uji' ));
+    Route::get('/show_detail_form/{form_uji_id}', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@show_detail_form' ));
     Route::put('/create_company_profile', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@create_company_profile' ));
     Route::post('/upload_doc_perorangan', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_doc_perorangan' ));
     Route::post('/upload_doc_dalam_negeri', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_doc_dalam_negeri' ));
     Route::post('/upload_doc_import', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_doc_import' ));
     Route::post('/create_Form', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@create_Form' ));
-    Route::get('/show_jadwal_uji', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@show_jadwal_uji' ));
-    Route::post('/send_billing', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@send_billing' ));
+    Route::put('/update_Form', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@update_Form' ));
+    Route::delete('/delete_Form', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@delete_Form' ));
+    Route::get('/show_jadwal_uji/{form_uji_id}', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@show_jadwal_uji' ));
+    Route::post('/accept_jadwal', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@accept_jadwal' ));
+    Route::post('/send_billing', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@send_billing' )); // unused
     Route::post('/upload_billing', array('middleware' => 'cors', 'uses' => 'lab_uji_controller@upload_billing' ));
   });
 });
@@ -187,9 +211,12 @@ Route::group(['prefix' => 'master'],function ()
   {
     Route::get('/show_lab_uji', array('middleware' => 'cors', 'uses' => 'master_controller@show_lab_uji' ));
     Route::get('/show_detail_lab_uji', array('middleware' => 'cors', 'uses' => 'master_controller@show_detail_lab_uji' ));
+    Route::get('/show_detail_form', array('middleware' => 'cors', 'uses' => 'master_controller@show_detail_form' ));
     Route::put('/change_status_doc_file', array('middleware' => 'cors', 'uses' => 'master_controller@change_status_doc_file' ));
     Route::put('/change_status_form', array('middleware' => 'cors', 'uses' => 'master_controller@change_status_form' ));
     Route::post('/create_jadwal_uji', array('middleware' => 'cors', 'uses' => 'master_controller@create_jadwal_uji' ));
     Route::post('/change_status_jadwal_uji', array('middleware' => 'cors', 'uses' => 'master_controller@change_status_jadwal_uji' ));
+    Route::post('/upload_kode_billing', array('middleware' => 'cors', 'uses' => 'master_controller@upload_kode_billing' ));
+    Route::post('/upload_hasil_laporan', array('middleware' => 'cors', 'uses' => 'master_controller@upload_hasil_laporan' ));
   });
 });

@@ -13,18 +13,20 @@ use App\Models\rice_seed;
 use App\Models\spare_part;
 use App\Models\training;
 use App\Models\Alsin_type;
+use App\Models\transaction_order;
 use Illuminate\Http\Request;
 use App\Models\spare_part_type;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Redirect;
 use Mailjet\LaravelMailjet\Facades\Mailjet;
 
 class General_Controller extends Controller
 {
   public function province(Request $request ){
 
-     $province = Province::all();
-
+     $province = Province::distinct('name')->get();
+     
      $final = array('provinces'=>$province, 'provinces'=>$province);
      return array('status' => 1 ,'result'=>$final);
   }
@@ -32,13 +34,16 @@ class General_Controller extends Controller
   public function city(Request $request ){
 
      $province = Province::where('id', $request->province_id)->first();
+      
      if($province == null){
        $final = array('message'=>'province_id not found');
        return array('status' => 0 ,'result'=>$final);
      }
-     $regencies = $province->regencies;
+   //   $regencies = $province->regencies;
 
-     $final = array('citys'=>$regencies);
+     $regencie = Regency::where('province_id', $request->province_id)->groupBy('name')->get();
+
+     $final = array('citys'=>$regencie);
      return array('status' => 1 ,'result'=>$final);
 
   }
@@ -50,7 +55,8 @@ class General_Controller extends Controller
        $final = array('message'=>'city_id not found');
        return array('status' => 0 ,'result'=>$final);
      }
-     $district = $regencie->districts;
+   //   $district = $regencie->districts;
+     $district = District::where('regency_id', $request->city_id)->groupBy('name')->get();
 
      $final = array('districts'=>$district);
      return array('status' => 1 ,'result'=>$final);
@@ -63,7 +69,14 @@ class General_Controller extends Controller
        $final = array('message'=>'district not found');
        return array('status' => 0 ,'result'=>$final);
      }
-     $district = $regencie->villages;
+   //   $district = $regencie->villages;
+     $district = Village::select('id','name')->where('district_id', $request->district_id)->groupBy('name')->get();
+
+   //   $district = DB::table('indoregion_villages')
+   //                     ->select('id', 'name')
+   //                    ->Where('district_id',  $request->district_id )
+   //                    ->groupBy('name')
+   //                    ->get();
 
      $final = array('villages'=>$district);
      return array('status' => 1 ,'result'=>$final);
@@ -71,14 +84,24 @@ class General_Controller extends Controller
 
   public function testing(Request $request ){
 
-    $tokenList = DB::table('transaction_notif_tokens')
-                  ->where('transaction_notif_tokens.farmer_id', 37)
-                  ->pluck('transaction_notif_tokens.token')
-                   ->all();
-      $this->PostNotifMultiple('halo',$tokenList, 'ini body' ,1, $tokenList );
+    // $tokenList = DB::table('transaction_notif_tokens')
+    //               ->where('transaction_notif_tokens.farmer_id', 37)
+    //               ->pluck('transaction_notif_tokens.token')
+    //                ->all();
+    //   $this->PostNotifMultiple('halo',$tokenList, 'ini body' ,1, $tokenList );
+    //
+    //  $final = array('districts'=>$tokenList);
+    //  return array('status' => 1 ,'result'=>$final);
 
-     $final = array('districts'=>$tokenList);
-     return array('status' => 1 ,'result'=>$final);
+    // $tokenList = transaction_order::
+    //               where('status', 'Menunggu Alsin dikirim')
+    //                ->get();
+    //  for($i = 0 ; $i < sizeof($tokenList) ; $i++){
+    //    $tokenList[$i]->status = 'Pekerjaan Siap Dilaksanakan';
+    //    $tokenList[$i]->save();
+    //  }
+    //
+    //  return 'sa';
   }
 
   public function PostNotifMultiple($title,$tokenList, $body,$tag, $datauser ){
@@ -194,4 +217,28 @@ class General_Controller extends Controller
      $final = array('spare_parts'=>$rice_seed);
      return array('status' => 1 ,'result'=>$final);
   }
+
+  public function admin(Request $request ){
+
+     return Redirect::to('https://drive.google.com/file/d/1HtRmMeoQ4wRHVU6Ngropq4ZhQiXYJVd4/view?usp=sharing');
+  }
+
+  public function upja(Request $request ){
+
+     return Redirect::to('https://drive.google.com/file/d/1R4UgpfUfE7Ir42SfIjoIK5Ew5eZ_JaM1/view?usp=sharing');
+  }
+
+  public function farmer(Request $request ){
+
+     return Redirect::to('https://docs.google.com/document/d/1Rtez0zpK-tEE-5BImOQ9h1HAq2AaNleF9XKfT2quElM/edit?usp=sharing');
+  }
+  public function master(Request $request ){
+
+     return Redirect::to('https://docs.google.com/document/d/1WFb2hsgl3Fc_t6SsvzqQ0wyx5Ov4_4Giw3cAlqLvwus/edit#heading=h.z6ne0og04bp5');
+  }
+  public function lab_uji(Request $request ){
+
+     return Redirect::to('https://docs.google.com/document/d/1BSz2Ygz3UeKUoQzhpMDuXbngAXRxf-zqkD5_g_VFpk0/edit#heading=h.2gazcsgmxkub');
+  }
+
 }

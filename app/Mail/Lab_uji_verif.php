@@ -31,6 +31,6 @@ class Lab_uji_verif extends Mailable
     public function build()
     {
 
-        return $this->from('alsintanlink@gmail.com')->view('email.lab_uji_verif');
+        return $this->subject('Email Verification')->from('alsintanlink@gmail.com')->view('email.lab_uji_verif');
     }
 }

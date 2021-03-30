@@ -31,6 +31,6 @@ class Upja_notif extends Mailable
     public function build()
     {
 
-        return $this->from('alsintanlink@gmail.com')->view('email.upja_notif');
+        return $this->subject('Upja Notif')->from('alsintanlink@gmail.com')->view('email.upja_notif');
     }
 }
