@@ -912,7 +912,7 @@ class Farmer_Controller extends Controller
       $passkey = '4ba83675fd17f25c721dbb6d';
       $telepon = $request->phone_number;
       $message = 'Anda meminta untuk melakukan reset password. silahkan klik link berikut ' .
-                 'https://alsintanlink.com/general/farmer_forget_form/' . $token_forget->token;
+                 env('APP_URL') . '/general/farmer_forget_form/' . $token_forget->token;
       $url = 'https://console.zenziva.net/reguler/api/sendsms/';
       $curlHandle = curl_init();
       curl_setopt($curlHandle, CURLOPT_URL, $url);

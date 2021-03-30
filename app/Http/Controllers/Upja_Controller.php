@@ -414,7 +414,7 @@ class Upja_Controller extends Controller
       $passkey = '4ba83675fd17f25c721dbb6d';
       $telepon = $request->email;
       $message = 'Anda meminta untuk melakukan reset password. silahkan klik link berikut ' .
-                 'http://alsintanlink.com/general/upja_forget_form/' . $upja->id;
+                 env('APP_URL') . '/general/upja_forget_form/' . $upja->id;
       $url = 'https://console.zenziva.net/reguler/api/sendsms/';
       $curlHandle = curl_init();
       curl_setopt($curlHandle, CURLOPT_URL, $url);

@@ -109,7 +109,7 @@ class master_controller extends Controller
 
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id',$request->lab_uji_id)->first();
       if($company_type!=null){
-        $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
+        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
         $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
       }
 
@@ -117,14 +117,14 @@ class master_controller extends Controller
 
       $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id', $request->lab_uji_id )->first();
       if($company_type!=null){
-        $company_type->url_akte_pendirian_perusahaan = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-        $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
-        $company_type->url_npwp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
-        $company_type->url_siup = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
-        $company_type->url_surat_keterangan_domisili = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-        $company_type->url_surat_suku_cadang = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
-        $company_type->url_tdp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
+        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
       }
 
     }else if($lab_uji->company_type == 2){
@@ -132,16 +132,16 @@ class master_controller extends Controller
       $company_type = transaction_lab_uji_doc_import::where('lab_uji_id', $request->lab_uji_id )->first();
       if($company_type!=null){
 
-        $company_type->url_akte_pendirian_perusahaan = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-        $company_type->url_api = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
-        $company_type->url_ktp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
-        $company_type->url_npwp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
-        $company_type->url_siup = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
-        $company_type->url_surat_keagenan_negara = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
-        $company_type->url_surat_keterangan_domisili = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-        $company_type->url_surat_suku_cadang = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
-        $company_type->url_tdp = 'https://alsintanlink.com/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
+        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_api = env('APP_URL') . '/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
+        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = env('APP_URL') . '/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keagenan_negara = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
+        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
       }
     }else{
       $company_type = null;
@@ -174,8 +174,8 @@ class master_controller extends Controller
     //                                 where('lab_uji_id', $request->lab_uji_id )->
     //                                 first();
     // if($lab_uji_jadwal != null){
-    //   $lab_uji_jadwal->bukti_pembayaran = 'https://alsintanlink.com/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
-    //   $lab_uji_jadwal->scan_hasil_uji= 'https://alsintanlink.com/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
+    //   $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
+    //   $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
     // }
 
     $final = array('lab_uji'=> $lab_uji, 'company_type'=> $company_type,
@@ -210,8 +210,8 @@ class master_controller extends Controller
                                     first();
 
     if($lab_uji_jadwal != null){
-      $lab_uji_jadwal->bukti_pembayaran = 'https://alsintanlink.com/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
-      $lab_uji_jadwal->scan_hasil_uji= 'https://alsintanlink.com/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
+      $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
+      $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
     }
 
     $final = array('lab_uji_form'=> $lab_uji_form , 'lab_uji_jadwal'=> $lab_uji_jadwal);
