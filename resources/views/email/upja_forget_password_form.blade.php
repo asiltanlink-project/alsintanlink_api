@@ -224,7 +224,7 @@ function submit_reset_password( )
         token: upja_id,
         password: new_password
      };
-    fetch('https://alsintanlink.com/api/upja/change_password',{
+    fetch('http://alsintanlink-api.litbang.pertanian.go.id/api/upja/change_password',{
                 method : 'POST',
                 headers: {
                   'Content-Type': 'application/json',

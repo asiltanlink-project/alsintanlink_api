@@ -12,7 +12,8 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    // return view('welcome');
+    return Redirect::to('https://play.google.com/store/apps/details?id=com.alsintanlink.mobileapp');
 });
 
 Route::group(['prefix' => 'general'],function ()

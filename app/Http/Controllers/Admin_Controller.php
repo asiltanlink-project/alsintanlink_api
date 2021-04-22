@@ -169,8 +169,8 @@ class Admin_Controller extends Controller
                                 ,'alsins.cost','alsin_types.picture_detail')
                       ->Where('upjas.id', $request->upja_id )
                       ->Where('alsin_types.alsin_other', 1 )
-                      ->groupBy('alsins.id','alsin_types.id','alsin_types.name'
-                                ,'alsins.cost','alsin_types.picture_detail')
+                      ->groupBy('alsin_types.id')
+                      ->distinct()
                       ->get();
 
   $transactions = DB::table('transaction_orders')

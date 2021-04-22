@@ -19,7 +19,7 @@ use App\Models\lab_uji\transaction_lab_uji_jadwal_uji;
 use App\Models\lab_uji\transaction_lab_uji_doc_import;
 use App\Models\lab_uji\transaction_lab_uji_doc_perorangan;
 use App\Models\lab_uji\transaction_lab_uji_doc_dalam_negeri;
-
+use Illuminate\Pagination\LengthAwarePaginator;
 class master_controller extends Controller
 {
   function __construct()
@@ -76,14 +76,76 @@ class master_controller extends Controller
     }
 
   public function show_lab_uji(Request $request){
-
+ 
     if($request->verify == null){
-      $lab_uji = lab_uji::orderBy('created_at','desc')
+      $lab_uji = lab_uji::select('lab_ujis.*', 
+                                  DB::raw("(select count(transaction_lab_uji_forms.id)
+                                  FROM transaction_lab_uji_forms
+                                  WHERE (transaction_lab_uji_forms.lab_uji_id = lab_ujis.id)
+                                  AND (transaction_lab_uji_forms.is_admin_action = 1)
+                                ) as is_admin_action
+                            ")
+                            )
+                          ->orderBy('is_admin_action','desc')
                           ->paginate(10);
     }else{
-      $lab_uji = lab_uji::where('verify',$request->verify)
-                          // ->with('transaction_forms')
+       $lab_uji = lab_uji::select('lab_ujis.*', 
+                                  DB::raw("(select count(transaction_lab_uji_forms.id)
+                                  FROM transaction_lab_uji_forms
+                                  WHERE (transaction_lab_uji_forms.lab_uji_id = lab_ujis.id)
+                                  AND (transaction_lab_uji_forms.is_admin_action = 1)
+                                ) as is_admin_action
+                            ")       )
+                          ->orderBy('is_admin_action','desc')
+                          ->where('is_admin_action','>',0)
                           ->paginate(10);
+    }
+
+
+    for ($i=0; $i < sizeof( $lab_uji ) ; $i++) { 
+      
+      if($lab_uji[$i]->company_type != -1){
+   
+        if($lab_uji[$i]->company_type == 0 ){
+     
+          $doc = $alsins = DB::table('transaction_lab_uji_doc_perorangans')
+                  ->select('verif')
+                  ->Where('lab_uji_id', $lab_uji[$i]->id )
+                  ->first();
+                 
+          if($doc != null){
+            if($doc->verif == 0){
+              $lab_uji[$i]->is_admin_action += 1;
+            }
+          }
+        }
+        if($lab_uji[$i]->company_type == 1){
+          
+          $doc = $alsins = DB::table('transaction_lab_uji_doc_dalam_negeris')
+                  ->select('verif')
+                  ->Where('lab_uji_id', $lab_uji[$i]->id )
+                  ->first();
+
+          if($doc != null){
+            if($doc->verif == 0){
+              $lab_uji[$i]->is_admin_action += 1;
+            }
+          }
+        }
+        if($lab_uji[$i]->company_type == 2){
+          
+          $doc = $alsins = DB::table('transaction_lab_uji_doc_imports')
+                  ->select('verif')
+                  ->Where('lab_uji_id', $lab_uji[$i]->id )
+                  ->first();
+
+          if($doc != null){
+            if($doc->verif == 0){
+              $lab_uji[$i]->is_admin_action += 1;
+            }
+          }
+        }
+      }
     }
 
     $max_page = round($lab_uji->total() / 10);
@@ -109,22 +171,22 @@ class master_controller extends Controller
 
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id',$request->lab_uji_id)->first();
       if($company_type!=null){
-        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_ktp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/public/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
       }
 
     }else if($lab_uji->company_type == 1){
 
       $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id', $request->lab_uji_id )->first();
       if($company_type!=null){
-        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
-        $company_type->url_npwp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
-        $company_type->url_siup = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
-        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-        $company_type->url_surat_suku_cadang = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
-        $company_type->url_tdp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
+        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_ktp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
       }
 
     }else if($lab_uji->company_type == 2){
@@ -132,16 +194,16 @@ class master_controller extends Controller
       $company_type = transaction_lab_uji_doc_import::where('lab_uji_id', $request->lab_uji_id )->first();
       if($company_type!=null){
 
-        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-        $company_type->url_api = env('APP_URL') . '/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
-        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
-        $company_type->url_npwp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
-        $company_type->url_siup = env('APP_URL') . '/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
-        $company_type->url_surat_keagenan_negara = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
-        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-        $company_type->url_surat_suku_cadang = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
-        $company_type->url_tdp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
+        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_api = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
+        $company_type->url_ktp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keagenan_negara = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
+        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
       }
     }else{
       $company_type = null;
@@ -149,6 +211,7 @@ class master_controller extends Controller
 
     $lab_uji_form = transaction_lab_uji_form::select('transaction_lab_uji_forms.id' ,
                                                     'transaction_lab_uji_forms.nama_alsintan' ,
+                                                    'transaction_lab_uji_forms.is_admin_action' ,
                                                     'lab_uji_status_alsintan.name as status_alsintan_name',
                                                     'lab_uji_status_pemohon.name as status_pemohon_name',
                                                     'lab_uji_journey.name as status_journey')->
@@ -174,8 +237,8 @@ class master_controller extends Controller
     //                                 where('lab_uji_id', $request->lab_uji_id )->
     //                                 first();
     // if($lab_uji_jadwal != null){
-    //   $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
-    //   $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
+    //   $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/public/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
+    //   $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/public/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
     // }
 
     $final = array('lab_uji'=> $lab_uji, 'company_type'=> $company_type,
@@ -210,8 +273,8 @@ class master_controller extends Controller
                                     first();
 
     if($lab_uji_jadwal != null){
-      $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
-      $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
+      $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/public/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
+      $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/public/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
     }
 
     $final = array('lab_uji_form'=> $lab_uji_form , 'lab_uji_jadwal'=> $lab_uji_jadwal);
@@ -231,7 +294,7 @@ class master_controller extends Controller
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id', $request->lab_uji_id )->first();
       $company_type->ktp = $request->ktp;
       $company_type->manual_book = $request->manual_book;
-
+      
       if($request->verif == 1){
         $company_type->verif = 1;
 
@@ -241,7 +304,7 @@ class master_controller extends Controller
                        ->all();
 
         app('App\Http\Controllers\General_Controller')->
-        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen diterima'
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Dokumen diterima'
                           ,1, $tokenList );
       }else{
         $company_type->verif = -1;
@@ -252,10 +315,10 @@ class master_controller extends Controller
                        ->all();
 
         app('App\Http\Controllers\General_Controller')->
-        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen ditolak'
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Dokumen ditolak'
                           ,1, $tokenList );
       }
-
+      $company_type->keterangan = $request->keterangan;
       $company_type->save();
 
     }else if($lab_uji->company_type == 1){
@@ -281,10 +344,10 @@ class master_controller extends Controller
                        ->all();
 
         app('App\Http\Controllers\General_Controller')->
-        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen diterima'
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Dokumen diterima'
                           ,1, $tokenList );
       }else{
-        $company_type->verify = -1;
+        $company_type->verif = -1;
 
         $tokenList = DB::table('transaction_notif_token_labs')
                       ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
@@ -292,10 +355,10 @@ class master_controller extends Controller
                        ->all();
 
         app('App\Http\Controllers\General_Controller')->
-        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen ditolak'
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Dokumen ditolak'
                           ,1, $tokenList );
       }
-
+      $company_type->keterangan = $request->keterangan;
       $company_type->save();
 
     }else if($lab_uji->company_type == 2){
@@ -323,7 +386,7 @@ class master_controller extends Controller
                        ->all();
 
         app('App\Http\Controllers\General_Controller')->
-        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen diterima'
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Dokumen diterima'
                           ,1, $tokenList );
       }else{
         $company_type->verif = -1;
@@ -334,10 +397,10 @@ class master_controller extends Controller
                        ->all();
 
         app('App\Http\Controllers\General_Controller')->
-        PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Dokumen ditolak'
+        PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Dokumen ditolak'
                           ,1, $tokenList );
       }
-
+      $company_type->keterangan = $request->keterangan;
       $company_type->save();
     }
 
@@ -366,11 +429,12 @@ class master_controller extends Controller
                      ->all();
 
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Formulir diterima'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Formulir diterima'
                         ,1, $tokenList );
     }else{
 
       $lab_uji_form->status_journey = -2;
+      $lab_uji_form->is_admin_action = 0;
       $lab_uji_form->save();
 
       $tokenList = DB::table('transaction_notif_token_labs')
@@ -379,7 +443,7 @@ class master_controller extends Controller
                      ->all();
 
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Formulir ditolak'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Formulir ditolak'
                         ,1, $tokenList );
     }
 
@@ -405,6 +469,7 @@ class master_controller extends Controller
     $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
                                               first();
     $lab_uji_form->status_journey = 3;
+    $lab_uji_form->is_admin_action = 0;
     $lab_uji_form->save();
 
     $tokenList = DB::table('transaction_notif_token_labs')
@@ -413,7 +478,7 @@ class master_controller extends Controller
                    ->all();
 
     app('App\Http\Controllers\General_Controller')->
-    PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Jadwal uji telah ditentukan'
+    PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Jadwal uji telah ditentukan'
                       ,1, $tokenList );
 
     $final = array('message'=> "membuat jadwal berhasil");
@@ -430,6 +495,7 @@ class master_controller extends Controller
     }
 
     $lab_uji_form->status_journey = $request->status;
+    $lab_uji_form->is_admin_action = 0;
     $lab_uji_form->save();
 
     $tokenList = DB::table('transaction_notif_token_labs')
@@ -442,7 +508,7 @@ class master_controller extends Controller
                     ->first();
 
     app('App\Http\Controllers\General_Controller')->
-    PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: ' . $lab_uji_journey->name
+    PostNotifMultiple('Alsintanlink',$tokenList, 'Status: ' . $lab_uji_journey->name
                       ,1, $tokenList );
 
     $final = array('message'=> "ganti status sukses");
@@ -452,12 +518,12 @@ class master_controller extends Controller
   public function upload_kode_billing(Request $request){
 
     $validator = \Validator::make($request->all(), [
-            'kode_billing' => 'required|file|mimes:pdf|max:7000', // max 7MB
+            'kode_billing' => 'required|file|mimes:pdf|max:2000', // max 2MB
         ], [
           'kode_billing.required' => 'kode_billing belum dipilih',
           'kode_billing.file' => 'kode_billing bukan file',
           'kode_billing.mimes' => 'kode_billing bukan pdf',
-          'kode_billing.max' => 'ukuran kode_billing melewati 7MB'
+          'kode_billing.max' => 'ukuran kode_billing melewati 2MB'
         ]);
 
     if ($validator->fails()) {
@@ -493,6 +559,7 @@ class master_controller extends Controller
       $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
                                                 first();
       $lab_uji_form->status_journey = 5;
+      $lab_uji_form->is_admin_action = 0;
       $lab_uji_form->save();
 
       $tokenList = DB::table('transaction_notif_token_labs')
@@ -501,7 +568,7 @@ class master_controller extends Controller
                      ->all();
 
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Kode billing telah dikirim'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Kode billing telah dikirim'
                         ,1, $tokenList );
     }
 
@@ -512,12 +579,12 @@ class master_controller extends Controller
   public function upload_hasil_laporan(Request $request){
 
     $validator = \Validator::make($request->all(), [
-            'scan_hasil_uji' => 'required|file|mimes:pdf|max:7000', // max 7MB
+            'scan_hasil_uji' => 'required|file|mimes:pdf|max:2000', // max 2MB
         ], [
           'scan_hasil_uji.required' => 'hasil_laporan belum dipilih',
           'scan_hasil_uji.file' => 'hasil_laporan bukan file',
           'scan_hasil_uji.mimes' => 'hasil_laporan bukan pdf',
-          'scan_hasil_uji.max' => 'ukuran hasil_laporan melewati 7MB'
+          'scan_hasil_uji.max' => 'ukuran hasil_laporan melewati 2MB'
         ]);
 
     if ($validator->fails()) {
@@ -551,7 +618,7 @@ class master_controller extends Controller
                      ->all();
 
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Status pengujian lab anda sekarang: Hasil laporan telah dikirim'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Status: Hasil laporan telah dikirim'
                         ,1, $tokenList );
     }
 

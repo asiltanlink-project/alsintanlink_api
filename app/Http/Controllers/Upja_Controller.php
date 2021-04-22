@@ -321,6 +321,10 @@ class Upja_Controller extends Controller
       $final = array('message'=> "upja tidak ditemukan");
       return array('status' => 0 ,'result'=>$final);
     }
+    if($user->otp_code != $request->otp_code){
+      $final = array('message'=> "kode otp salah");
+      return array('status' => 0 ,'result'=>$final);
+    }
     $user->email_verify = 1;
     $user->save();
 
@@ -1191,20 +1195,20 @@ class Upja_Controller extends Controller
       $transaction->total_cost = $total_cost + $request->transport_cost;
 
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda telah ditentukan harga oleh Upja. silahkan cek transaksi.'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan telah ditentukan harga'
                         ,1, $tokenList );
 
     }else if($request->status == 'Menunggu Konfirmasi Upja'){
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda telah diterima Upja'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda telah diterima'
                         ,1, $tokenList );
-    }else if($request->status == 'Menunggu Alsin dikirim'){
+    }else if($request->status == 'Pekerjaan Siap Dilaksanakan'){
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda telah dikirim Upja'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda siap dikerjakan'
                         ,1, $tokenList );
     }else if($request->status == 'Sedang dikerjakan'){
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda sedang dikerjakan Upja'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda sedang dikerjakan'
                         ,1, $tokenList );
     }else if($request->status === 'Selesai'){
 
@@ -1226,7 +1230,7 @@ class Upja_Controller extends Controller
       }
 
       app('App\Http\Controllers\General_Controller')->
-      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda telah selesai'
+      PostNotifMultiple('Alsintanlink',$tokenList, 'Pesanan anda selesai'
                         ,1, $tokenList );
     }else if($request->status == 'Transaksi ditolak Upja'){
 
@@ -1296,6 +1300,9 @@ class Upja_Controller extends Controller
 
   public function show_form_pricing(Request $request)
   {
+    $token = JWTAuth::getToken();
+    $fixedtoken = JWTAuth::setToken($token)->toUser();
+    $user_id = $fixedtoken->id;
     $header = DB::table('transaction_orders')
                        ->select('transaction_orders.id as transaction_order_id', 'transaction_orders.transport_cost'
                                   ,'transaction_orders.total_cost', 'transaction_orders.status'
@@ -1342,16 +1349,17 @@ class Upja_Controller extends Controller
                                )
                       ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                       ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
-                      ->whereIn('alsin_types.id',
-                                DB::table('transaction_order_types')
-                                ->select('alsin_types.id')
-                                ->Join ('alsin_types', 'alsin_types.id', '=',
-                                        'transaction_order_types.alsin_type_id')
-                                ->Where('transaction_order_types.transaction_order_id',
-                                        $request->transaction_order_id )
-                         )
+                      // ->whereIn('alsin_types.id',
+                      //           DB::table('transaction_order_types')
+                      //           ->select('alsin_types.id')
+                      //           ->Join ('alsin_types', 'alsin_types.id', '=',
+                      //                   'transaction_order_types.alsin_type_id')
+                      //           ->Where('transaction_order_types.transaction_order_id',
+                      //                   $request->transaction_order_id )
+                      //    )
                       ->where('alsin_types.name', 'like', '%' . $request->keyword_alsin_item . '%')
                       ->Where('alsin_items.status','Tersedia')
+                      ->Where('alsins.upja_id', $user_id)
                       ->Paginate(10);
 
     $alsins->setPath(env('APP_URL') . '/api/upja/show_form_pricing?transaction_order_id=' .

@@ -295,9 +295,24 @@ class Farmer_Controller extends Controller
       return array('status' => 0 ,'result'=>$final);
     }
 
-    $upja = Upja::select('id','name','leader_name','class')
-                    ->where('village', $request->village_id )
-                    ->get();
+    if($request->village_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('village', $request->village_id )
+              ->get();
+    }else  if($request->village_id == null && $request->district_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('district', $request->district_id )
+              ->get();
+    }else  if($request->district_id == null && $request->city_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('city', $request->city_id )
+              ->get();
+    }else  if($request->city_id == null && $request->province_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('province', $request->province_id )
+              ->get();
+    }
+
 
     $final = array('upjas'=>$upja);
     return array('status' => 1 ,'result'=>$final);
@@ -907,12 +922,34 @@ class Farmer_Controller extends Controller
       $token_forget->expired_at = Carbon::now()->addHours(1);
       $token_forget->save();
 
-      // send otp
+      // $userkey = 'd27a72ddaf0b';
+      // $passkey = '4ba83675fd17f25c721dbb6d';
+      // $telepon = '085771559962';
+      // $message = 'Anda meminta untuk melakukan reset password. silahkan klik link berikut ' .
+      //             env('APP_URL') . '/general/farmer_forget_form/' . $token_forget->token;
+      // $url = 'https://console.zenziva.net/wareguler/api/sendWA/';
+      // $curlHandle = curl_init();
+      // curl_setopt($curlHandle, CURLOPT_URL, $url);
+      // curl_setopt($curlHandle, CURLOPT_HEADER, 0);
+      // curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+      // curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
+      // curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+      // curl_setopt($curlHandle, CURLOPT_TIMEOUT,30);
+      // curl_setopt($curlHandle, CURLOPT_POST, 1);
+      // curl_setopt($curlHandle, CURLOPT_POSTFIELDS, array(
+      //     'userkey' => $userkey,
+      //     'passkey' => $passkey,
+      //     'to' => $telepon,
+      //     'message' => $message
+      // ));
+      // $results = json_decode(curl_exec($curlHandle), true);
+      // curl_close($curlHandle);
+      // // send otp
       $userkey = 'd27a72ddaf0b';
       $passkey = '4ba83675fd17f25c721dbb6d';
       $telepon = $request->phone_number;
       $message = 'Anda meminta untuk melakukan reset password. silahkan klik link berikut ' .
-                 env('APP_URL') . '/general/farmer_forget_form/' . $token_forget->token;
+                env('APP_URL') . '/general/farmer_forget_form/' . $token_forget->token;
       $url = 'https://console.zenziva.net/reguler/api/sendsms/';
       $curlHandle = curl_init();
       curl_setopt($curlHandle, CURLOPT_URL, $url);
@@ -930,7 +967,7 @@ class Farmer_Controller extends Controller
       ));
       $results = json_decode(curl_exec($curlHandle), true);
       curl_close($curlHandle);
-
+     
       $final = array('message'=>'Forget Password berhasil');
       return array('status' => 1,'result'=>$final);
     }

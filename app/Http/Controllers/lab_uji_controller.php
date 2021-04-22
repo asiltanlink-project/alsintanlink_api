@@ -200,8 +200,8 @@ class lab_uji_controller extends Controller
 
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id', $user_id )->first();
       if($company_type!=null){
-        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_ktp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/public/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
       }else{
         $company_type = null;
       }
@@ -209,14 +209,14 @@ class lab_uji_controller extends Controller
 
       $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id', $user_id )->first();
       if($company_type!=null){
-        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
-        $company_type->url_npwp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
-        $company_type->url_siup = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
-        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-        $company_type->url_surat_suku_cadang = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
-        $company_type->url_tdp = env('APP_URL') . '/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
+        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_ktp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/dalam_negeri/tdp/' . $company_type->url_tdp;
       }else{
         $company_type = null;
       }
@@ -225,16 +225,16 @@ class lab_uji_controller extends Controller
       $company_type = transaction_lab_uji_doc_import::where('lab_uji_id', $user_id )->first();
       if($company_type!=null){
 
-        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
-        $company_type->url_api = env('APP_URL') . '/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
-        $company_type->url_ktp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = env('APP_URL') . '/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
-        $company_type->url_npwp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
-        $company_type->url_siup = env('APP_URL') . '/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
-        $company_type->url_surat_keagenan_negara = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
-        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
-        $company_type->url_surat_suku_cadang = env('APP_URL') . '/storage/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
-        $company_type->url_tdp = env('APP_URL') . '/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
+        $company_type->url_akte_pendirian_perusahaan = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan;
+        $company_type->url_api = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/api/' . $company_type->url_api;
+        $company_type->url_ktp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp;
+        $company_type->url_manual_book = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp;
+        $company_type->url_siup = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/siup/' . $company_type->url_siup;
+        $company_type->url_surat_keagenan_negara = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara;
+        $company_type->url_surat_keterangan_domisili = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili;
+        $company_type->url_surat_suku_cadang = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang;
+        $company_type->url_tdp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp;
       }else{
         $company_type = null;
       }
@@ -249,28 +249,6 @@ class lab_uji_controller extends Controller
                                               Join ('lab_uji_status_alsintan', 'lab_uji_status_alsintan.id',
                                                     '=', 'transaction_lab_uji_forms.status_alsintan')->
                                               get();
-
-    // $lab_uji_form = transaction_lab_uji_form::select('transaction_lab_uji_forms.*' ,
-    //                                                 'lab_uji_status_alsintan.name as status_alsintan_name',
-    //                                                 'lab_uji_status_pemohon.name as status_pemohon_name')->
-    //                                           where('lab_uji_id', $user_id )->
-    //                                           Join ('lab_uji_status_pemohon', 'lab_uji_status_pemohon.id',
-    //                                                 '=', 'transaction_lab_uji_forms.status_pemohon')->
-    //                                           Join ('lab_uji_status_alsintan', 'lab_uji_status_alsintan.id',
-    //                                                 '=', 'transaction_lab_uji_forms.status_alsintan')->
-    //                                           first();
-    //
-    // $lab_uji_jadwal = transaction_lab_uji_jadwal_uji::select('transaction_lab_uji_jadwal_ujis.*',
-    //                                 DB::raw('DATE_FORMAT(transaction_lab_uji_jadwal_ujis.waktu_uji_lab, "%d %b %Y") as waktu_uji_lab'),
-    //                                 DB::raw('DATE_FORMAT(transaction_lab_uji_jadwal_ujis.waktu_uji_lapangan, "%d %b %Y") as waktu_uji_lapangan')
-    //                                 )->
-    //                                 where('lab_uji_id', $user_id )->
-    //                                 first();
-    //
-    // if($lab_uji_jadwal != null){
-    //   $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
-    //   $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
-    // }
 
     $final = array('lab_uji'=> $lab_uji, 'company_type'=> $company_type,
                    'lab_uji_forms'=> $lab_uji_form);
@@ -302,8 +280,8 @@ class lab_uji_controller extends Controller
                                     first();
 
     if($lab_uji_jadwal != null){
-      $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
-      $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
+      $lab_uji_jadwal->bukti_pembayaran = env('APP_URL') . '/public/storage/lab_uji_upload/bukti_pembayaran/' . $lab_uji_jadwal->bukti_pembayaran;
+      $lab_uji_jadwal->scan_hasil_uji= env('APP_URL') . '/public/storage/lab_uji_upload/scan_hasil_uji/' . $lab_uji_jadwal->scan_hasil_uji;
     }
 
     $final = array('lab_uji_form'=> $lab_uji_form , 'lab_uji_jadwal'=> $lab_uji_jadwal);
@@ -355,15 +333,19 @@ class lab_uji_controller extends Controller
 
     // upload doc
     $validator = \Validator::make($request->all(), [
-          'url_ktp' => 'file|mimes:pdf|max:7000', // max 7MB
-          'url_manual_book' => 'file|mimes:pdf|max:7000', // max 7MB
+          'url_ktp' => 'file|mimes:pdf|max:2000', // max 2MB
+          // 'url_manual_book' => 'file|mimes:pdf|max:2000', // max 2MB
+          'url_npwp' => 'file|mimes:pdf|max:2000', // max 2MB
         ], [
           'url_ktp.file' => 'url_ktp bukan file',
           'url_ktp.mimes' => 'url_ktp bukan pdf',
-          'url_ktp.max' => 'ukuran url_ktp melewati 7MB',
-          'url_manual_book.file' => 'url_manual_book bukan file',
-          'url_manual_book.mimes' => 'url_manual_book bukan pdf',
-          'url_manual_book.max' => 'ukuran url_manual_book melewati 7MB'
+          'url_ktp.max' => 'ukuran url_ktp melewati 2MB',
+          // 'url_manual_book.file' => 'url_manual_book bukan file',
+          // 'url_manual_book.mimes' => 'url_manual_book bukan pdf',
+          // 'url_manual_book.max' => 'ukuran url_manual_book melewati 2MB',
+          'url_npwp.file' => 'url_npwp bukan file',
+          'url_npwp.mimes' => 'url_npwp bukan pdf',
+          'url_npwp.max' => 'ukuran url_npwp melewati 2MB'
         ]);
 
     if ($validator->fails()) {
@@ -391,8 +373,11 @@ class lab_uji_controller extends Controller
       if($company_type->ktp == 0){
         $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp) , $company_type->url_ktp);
       }
-      if($company_type->manual_book == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book) , $company_type->url_manual_book);
+      // if($company_type->manual_book == 0){
+      //   $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book) , $company_type->url_manual_book);
+      // }
+      if($company_type->npwp == 0){
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/npwp/' . $company_type->url_npwp) , $company_type->url_npwp);
       }
     }
 
@@ -408,14 +393,24 @@ class lab_uji_controller extends Controller
     }
 
     // manual book
-    if($request->hasFile('url_manual_book')){
-      $upload = Storage::putFile(
-          'public/lab_uji_upload/doc/perorangan/manual_book' ,
-          $request->file('url_manual_book')
-      );
-      $path_url_manual_book = basename($upload);
-      $company_type->url_manual_book = $path_url_manual_book;
-    }
+    // if($request->hasFile('url_manual_book')){
+    //   $upload = Storage::putFile(
+    //       'public/lab_uji_upload/doc/perorangan/manual_book' ,
+    //       $request->file('url_manual_book')
+    //   );
+    //   $path_url_manual_book = basename($upload);
+    //   $company_type->url_manual_book = $path_url_manual_book;
+    // }
+
+      // npwp
+      if($request->hasFile('url_npwp')){
+        $upload = Storage::putFile(
+            'public/lab_uji_upload/doc/perorangan/npwp' ,
+            $request->file('url_npwp')
+        );
+        $path_url_npwp = basename($upload);
+        $company_type->url_npwp = $path_url_npwp;
+      }
     $company_type->save();
 
     $final = array('message'=> "upload doc berhasil");
@@ -426,46 +421,46 @@ class lab_uji_controller extends Controller
 
     //upload doc
     $validator = \Validator::make($request->all(), [
-        'url_akte_pendirian_perusahaan' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_ktp' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_npwp' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_surat_keterangan_domisili' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_siup' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_tdp' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_surat_suku_cadang' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_manual_book' => 'file|mimes:pdf|max:7000', // max 7MB
+        'url_akte_pendirian_perusahaan' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_ktp' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_npwp' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_surat_keterangan_domisili' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_siup' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_tdp' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_surat_suku_cadang' => 'file|mimes:pdf|max:2000', // max 2MB
+        // 'url_manual_book' => 'file|mimes:pdf|max:2000', // max 2MB
       ], [
         'url_akte_pendirian_perusahaan.file' => 'url_akte_pendirian_perusahaan bukan file',
         'url_akte_pendirian_perusahaan.mimes' => 'url_akte_pendirian_perusahaan bukan pdf',
-        'url_akte_pendirian_perusahaan.max' => 'ukuran url_akte_pendirian_perusahaan melewati 7MB',
+        'url_akte_pendirian_perusahaan.max' => 'ukuran url_akte_pendirian_perusahaan melewati 2MB',
 
         'url_ktp.file' => 'url_ktp bukan file',
         'url_ktp.mimes' => 'url_ktp bukan pdf',
-        'url_ktp.max' => 'ukuran url_ktp melewati 7MB',
+        'url_ktp.max' => 'ukuran url_ktp melewati 2MB',
 
         'url_npwp.file' => 'url_npwp bukan file',
         'url_npwp.mimes' => 'url_npwp bukan pdf',
-        'url_npwp.max' => 'ukuran url_npwp melewati 7MB',
+        'url_npwp.max' => 'ukuran url_npwp melewati 2MB',
 
         'url_surat_keterangan_domisili.file' => 'url_surat_keterangan_domisili bukan file',
         'url_surat_keterangan_domisili.mimes' => 'url_surat_keterangan_domisili bukan pdf',
-        'url_surat_keterangan_domisili.max' => 'ukuran url_surat_keterangan_domisili melewati 7MB',
+        'url_surat_keterangan_domisili.max' => 'ukuran url_surat_keterangan_domisili melewati 2MB',
 
         'url_siup.file' => 'url_siup bukan file',
         'url_siup.mimes' => 'url_siup bukan pdf',
-        'url_siup.max' => 'ukuran url_siup melewati 7MB',
+        'url_siup.max' => 'ukuran url_siup melewati 2MB',
 
         'url_tdp.file' => 'url_tdp bukan file',
         'url_tdp.mimes' => 'url_tdp bukan pdf',
-        'url_tdp.max' => 'ukuran url_tdp melewati 7MB',
+        'url_tdp.max' => 'ukuran url_tdp melewati 2MB',
 
         'url_surat_suku_cadang.file' => 'url_surat_suku_cadang bukan file',
         'url_surat_suku_cadang.mimes' => 'url_surat_suku_cadang bukan pdf',
-        'url_surat_suku_cadang.max' => 'ukuran url_surat_suku_cadang melewati 7MB',
+        'url_surat_suku_cadang.max' => 'ukuran url_surat_suku_cadang melewati 2MB',
 
-        'url_manual_book.file' => 'url_manual_book bukan file',
-        'url_manual_book.mimes' => 'url_manual_book bukan pdf',
-        'url_manual_book.max' => 'ukuran url_manual_book melewati 7MB'
+        // 'url_manual_book.file' => 'url_manual_book bukan file',
+        // 'url_manual_book.mimes' => 'url_manual_book bukan pdf',
+        // 'url_manual_book.max' => 'ukuran url_manual_book melewati 2MB'
       ]);
 
     if ($validator->fails()) {
@@ -501,9 +496,9 @@ class lab_uji_controller extends Controller
       if($company_type->akte_pendirian_perusahaan == 0){
         $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan) , $company_type->url_akte_pendirian_perusahaan);
       }
-      if($company_type->manual_book == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\manual_book/' . $company_type->url_manual_book) , $company_type->url_manual_book);
-      }
+      // if($company_type->manual_book == 0){
+      //   $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\manual_book/' . $company_type->url_manual_book) , $company_type->url_manual_book);
+      // }
       if($company_type->ktp == 0){
         $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\ktp/' . $company_type->url_ktp) , $company_type->url_ktp);
       }
@@ -596,14 +591,14 @@ class lab_uji_controller extends Controller
     }
 
     // url_manual_book
-    if($request->hasFile('url_manual_book')){
-      $upload = Storage::putFile(
-          'public/lab_uji_upload/doc/dalam_negeri/manual_book' ,
-          $request->file('url_manual_book')
-      );
-      $path_url_manual_book = basename($upload);
-      $company_type->url_manual_book = $path_url_manual_book;
-    }
+    // if($request->hasFile('url_manual_book')){
+    //   $upload = Storage::putFile(
+    //       'public/lab_uji_upload/doc/dalam_negeri/manual_book' ,
+    //       $request->file('url_manual_book')
+    //   );
+    //   $path_url_manual_book = basename($upload);
+    //   $company_type->url_manual_book = $path_url_manual_book;
+    // }
 
     $company_type->save();
 
@@ -615,56 +610,56 @@ class lab_uji_controller extends Controller
 
       //upload doc
       $validator = \Validator::make($request->all(), [
-        'url_akte_pendirian_perusahaan' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_ktp' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_npwp' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_api' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_surat_keterangan_domisili' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_siup' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_tdp' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_surat_keagenan_negara' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_surat_suku_cadang' => 'file|mimes:pdf|max:7000', // max 7MB
-        'url_manual_book' => 'file|mimes:pdf|max:7000', // max 7MB
+        'url_akte_pendirian_perusahaan' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_ktp' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_npwp' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_api' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_surat_keterangan_domisili' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_siup' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_tdp' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_surat_keagenan_negara' => 'file|mimes:pdf|max:2000', // max 2MB
+        'url_surat_suku_cadang' => 'file|mimes:pdf|max:2000', // max 2MB
+        // 'url_manual_book' => 'file|mimes:pdf|max:2000', // max 2MB
       ], [
         'url_akte_pendirian_perusahaan.file' => 'url_akte_pendirian_perusahaan bukan file',
         'url_akte_pendirian_perusahaan.mimes' => 'url_akte_pendirian_perusahaan bukan pdf',
-        'url_akte_pendirian_perusahaan.max' => 'ukuran url_akte_pendirian_perusahaan melewati 7MB',
+        'url_akte_pendirian_perusahaan.max' => 'ukuran url_akte_pendirian_perusahaan melewati 2MB',
 
         'url_ktp.file' => 'url_ktp bukan file',
         'url_ktp.mimes' => 'url_ktp bukan pdf',
-        'url_ktp.max' => 'ukuran url_ktp melewati 7MB',
+        'url_ktp.max' => 'ukuran url_ktp melewati 2MB',
 
         'url_npwp.file' => 'url_npwp bukan file',
         'url_npwp.mimes' => 'url_npwp bukan pdf',
-        'url_npwp.max' => 'ukuran url_npwp melewati 7MB',
+        'url_npwp.max' => 'ukuran url_npwp melewati 2MB',
 
         'url_api.file' => 'url_api bukan file',
         'url_api.mimes' => 'url_api bukan pdf',
-        'url_api.max' => 'ukuran url_api melewati 7MB',
+        'url_api.max' => 'ukuran url_api melewati 2MB',
 
         'url_surat_keterangan_domisili.file' => 'url_surat_keterangan_domisili bukan file',
         'url_surat_keterangan_domisili.mimes' => 'url_surat_keterangan_domisili bukan pdf',
-        'url_surat_keterangan_domisili.max' => 'ukuran url_surat_keterangan_domisili melewati 7MB',
+        'url_surat_keterangan_domisili.max' => 'ukuran url_surat_keterangan_domisili melewati 2MB',
 
         'url_siup.file' => 'url_siup bukan file',
         'url_siup.mimes' => 'url_siup bukan pdf',
-        'url_siup.max' => 'ukuran url_siup melewati 7MB',
+        'url_siup.max' => 'ukuran url_siup melewati 2MB',
 
         'url_tdp.file' => 'url_tdp bukan file',
         'url_tdp.mimes' => 'url_tdp bukan pdf',
-        'url_tdp.max' => 'ukuran url_tdp melewati 7MB',
+        'url_tdp.max' => 'ukuran url_tdp melewati 2MB',
 
         'url_surat_keagenan_negara.file' => 'url_surat_keagenan_negara bukan file',
         'url_surat_keagenan_negara.mimes' => 'url_surat_keagenan_negara bukan pdf',
-        'url_surat_keagenan_negara.max' => 'ukuran url_surat_keagenan_negara melewati 7MB',
+        'url_surat_keagenan_negara.max' => 'ukuran url_surat_keagenan_negara melewati 2MB',
 
         'url_surat_suku_cadang.file' => 'url_surat_suku_cadang bukan file',
         'url_surat_suku_cadang.mimes' => 'url_surat_suku_cadang bukan pdf',
-        'url_surat_suku_cadang.max' => 'ukuran url_surat_suku_cadang melewati 7MB',
+        'url_surat_suku_cadang.max' => 'ukuran url_surat_suku_cadang melewati 2MB',
 
-        'url_manual_book.file' => 'url_manual_book bukan file',
-        'url_manual_book.mimes' => 'url_manual_book bukan pdf',
-        'url_manual_book.max' => 'ukuran url_manual_book melewati 7MB'
+        // 'url_manual_book.file' => 'url_manual_book bukan file',
+        // 'url_manual_book.mimes' => 'url_manual_book bukan pdf',
+        // 'url_manual_book.max' => 'ukuran url_manual_book melewati 2MB'
       ]);
 
     if ($validator->fails()) {
@@ -702,9 +697,9 @@ class lab_uji_controller extends Controller
       if($company_type->api == 0){
         $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/api\\' . $company_type->url_api) , $company_type->url_api);
       }
-      if($company_type->manual_book == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/manual_book\\' . $company_type->url_manual_book) , $company_type->url_manual_book);
-     }
+    //   if($company_type->manual_book == 0){
+    //     $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/manual_book\\' . $company_type->url_manual_book) , $company_type->url_manual_book);
+    //  }
       if($company_type->ktp == 0){
         $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/ktp\\' . $company_type->url_ktp) , $company_type->url_ktp);
       }
@@ -829,15 +824,15 @@ class lab_uji_controller extends Controller
     }
 
     // url_manual_book
-    if($request->hasFile('url_manual_book')){
-      $upload = Storage::putFile(
-          'public/lab_uji_upload/doc/import/manual_book' ,
-          $request->file('url_manual_book')
-      );
+    // if($request->hasFile('url_manual_book')){
+    //   $upload = Storage::putFile(
+    //       'public/lab_uji_upload/doc/import/manual_book' ,
+    //       $request->file('url_manual_book')
+    //   );
 
-      $path_url_manual_book = basename($upload);
-      $company_type->url_manual_book = $path_url_manual_book;
-    }
+    //   $path_url_manual_book = basename($upload);
+    //   $company_type->url_manual_book = $path_url_manual_book;
+    // }
 
     $company_type->save();
 
@@ -879,6 +874,7 @@ class lab_uji_controller extends Controller
     $data = $request->except('form_uji_id' );
     $data['verif'] = null;
     $data['status_journey'] = 0;
+    $data['is_admin_action'] = 1;
 
     DB::table('transaction_lab_uji_forms')->where('id', $request->form_uji_id)
                                           ->update($data);
@@ -941,12 +937,12 @@ class lab_uji_controller extends Controller
 
       // upload doc
       $validator = \Validator::make($request->all(), [
-      'bukti_pembayaran' => 'file|required|mimes:pdf|max:7000', // max 7MB
+      'bukti_pembayaran' => 'file|required|mimes:pdf|max:2000', // max 2MB
     ], [
       'bukti_pembayaran.required' => 'bukti_pembayaran belum dipilih',
       'bukti_pembayaran.file' => 'bukti_pembayaran bukan file',
       'bukti_pembayaran.mimes' => 'bukti_pembayaran bukan pdf',
-      'bukti_pembayaran.max' => 'ukuran bukti_pembayaran melewati 7MB',
+      'bukti_pembayaran.max' => 'ukuran bukti_pembayaran melewati 2MB',
     ]);
 
     if ($validator->fails()) {
@@ -972,6 +968,7 @@ class lab_uji_controller extends Controller
 
       $lab_uji_id = transaction_lab_uji_form::find($request->form_uji_id);
       $lab_uji_id->status_journey = 6;
+      $lab_uji_id->is_admin_action = 1;
       $lab_uji_id->save();
     }
 
@@ -1025,6 +1022,7 @@ class lab_uji_controller extends Controller
       return array('status' => 0 ,'result'=>$final);
     }
     $alsins->status_journey = 4;
+    $alsins->is_admin_action = 1;
     $alsins->save();
 
     $final = array('message'=> "accept jadwal berhasil");

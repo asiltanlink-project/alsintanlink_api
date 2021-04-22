@@ -18,19 +18,37 @@ class spare_part_Excel implements ToModel,WithHeadingRow
     public function model(array $row)
     {
         if($row['type'] == 'Item'){
-              // dd());
-              return new spare_part([
+
+              $check_spare_part_type = spare_part::
+                                        where('name',$row['name'])
+                                        ->first();
+
+              if($check_spare_part_type == null){
+                return new spare_part([
                   'name' => $row['name'],
                   'kode_produk' => $row['kode_produk'],
                   'part_number' => $row['part_number'],
                   'spare_part_type_id' => $this->convert_spare_part_type($row['spare_part_type'])
               ]);
+
+              return;
+          }
+             
         }else if($row['type'] == 'Jenis'){
 
-              return new spare_part_type([
+              $check_spare_part_type = spare_part_type::
+                                        where('name',$row['name'])
+                                        ->first();
+
+              if($check_spare_part_type == null){
+                return new spare_part_type([
                   'name' => $row['name'],
                   'alsin_type_id' => $this->convert_alsin_type($row['alsin_type'])
               ]);
+
+              return;
+          }
+          
         }
     }
 

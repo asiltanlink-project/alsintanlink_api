@@ -220,25 +220,25 @@ class General_Controller extends Controller
 
   public function admin(Request $request ){
 
-     return Redirect::to('https://drive.google.com/file/d/1HtRmMeoQ4wRHVU6Ngropq4ZhQiXYJVd4/view?usp=sharing');
+     return Redirect::to('https://drive.google.com/file/d/1T26SHZujX0vUQEpefQcLQMuik9x0l3pV/view?usp=sharing');
   }
 
   public function upja(Request $request ){
 
-     return Redirect::to('https://drive.google.com/file/d/1R4UgpfUfE7Ir42SfIjoIK5Ew5eZ_JaM1/view?usp=sharing');
+     return Redirect::to('https://drive.google.com/file/d/1U6E-i-lgFb-42tl48xSxc4_NaXkRtcln/view?usp=sharing');
   }
 
   public function farmer(Request $request ){
 
-     return Redirect::to('https://docs.google.com/document/d/1Rtez0zpK-tEE-5BImOQ9h1HAq2AaNleF9XKfT2quElM/edit?usp=sharing');
+     return Redirect::to('https://drive.google.com/file/d/1OUF9sRkHqvsE2LT10BBM9VXuFy0BlHXW/view?usp=sharing');
   }
   public function master(Request $request ){
 
-     return Redirect::to('https://docs.google.com/document/d/1WFb2hsgl3Fc_t6SsvzqQ0wyx5Ov4_4Giw3cAlqLvwus/edit#heading=h.z6ne0og04bp5');
+     return Redirect::to('https://drive.google.com/file/d/1npjvvfH80SzmAc5Nrvd-HAeA5_lFw7BQ/view?usp=sharing');
   }
   public function lab_uji(Request $request ){
 
-     return Redirect::to('https://docs.google.com/document/d/1BSz2Ygz3UeKUoQzhpMDuXbngAXRxf-zqkD5_g_VFpk0/edit#heading=h.2gazcsgmxkub');
+     return Redirect::to('https://drive.google.com/file/d/1o4Kn1YMl6ljCsnG1sbmRoSJ5jmfSkNmp/view?usp=sharing');
   }
 
 }
