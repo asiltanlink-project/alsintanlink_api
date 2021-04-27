@@ -103,6 +103,11 @@ class master_controller extends Controller
                           ->paginate(10);
     }
 
+    $max_page = $lab_uji->lastPage();
+    $current_page =$lab_uji->currentPage();
+    if($max_page == 0){
+      $max_page = 1;
+    }
 
     for ($i=0; $i < sizeof( $lab_uji ) ; $i++) { 
       
@@ -148,12 +153,6 @@ class master_controller extends Controller
           }
         }
       }
-    }
-
-    $max_page = round($lab_uji->total() / 10);
-    $current_page =$lab_uji->currentPage();
-    if($max_page == 0){
-      $max_page = 1;
     }
 
     $final = array('lab_ujis'=> $lab_uji,'max_page'=> $max_page,
