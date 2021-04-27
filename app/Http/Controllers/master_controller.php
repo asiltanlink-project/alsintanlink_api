@@ -456,20 +456,23 @@ class master_controller extends Controller
 
     $jadwal_uji = transaction_lab_uji_jadwal_uji::where('form_uji_id',$request->form_uji_id )
                                                   ->first();
+
+    $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
+                      first();
+  
     if($jadwal_uji == null){
       $jadwal_uji = new transaction_lab_uji_jadwal_uji;
       $jadwal_uji->lab_uji_id = $request->lab_uji_id;
       $jadwal_uji->form_uji_id = $request->form_uji_id;
-      $jadwal_uji->status_journey = 3;
-    }
+      
+      $lab_uji_form->status_journey = 3;
+    } 
     $jadwal_uji->tim_uji = $request->tim_uji;
     $jadwal_uji->waktu_uji_lab = $request->waktu_uji_lab;
     $jadwal_uji->waktu_uji_lapangan = $request->waktu_uji_lapangan;
     $jadwal_uji->lokasi_uji = $request->lokasi_uji;
     $jadwal_uji->save();
 
-    $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
-                                              first();
     $lab_uji_form->is_admin_action = 0;
     $lab_uji_form->save();
 
