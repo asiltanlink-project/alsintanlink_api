@@ -499,7 +499,7 @@ class master_controller extends Controller
     }
 
     $lab_uji_form->status_journey = $request->status;
-    $lab_uji_form->is_admin_action = 0;
+    // $lab_uji_form->is_admin_action = 0;
     $lab_uji_form->save();
 
     $tokenList = DB::table('transaction_notif_token_labs')
@@ -614,6 +614,7 @@ class master_controller extends Controller
       $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
                                                 first();
       $lab_uji_form->status_journey = 10;
+      $lab_uji_form->is_admin_action = 0;
       $lab_uji_form->save();
 
       $tokenList = DB::table('transaction_notif_token_labs')
