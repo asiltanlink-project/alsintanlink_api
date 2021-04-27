@@ -70,7 +70,7 @@ Route::group(['prefix' => 'farmer'],function ()
   Route::post('/reset_otp', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@reset_otp' ));
   Route::post('/resend_otp', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@resend_otp' ));
   Route::post('/forget_password',array('middleware' => 'cors', 'uses' => 'Farmer_Controller@forget_password' ) );
-  Route::get('/show_upja/{province_id}/{city_id}/{district_id}/{village_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_upja' ));
+  Route::get('/show_upja', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_upja_v2' ));
   Route::get('/show_upja/{village_id}', array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_upja' ));
   Route::get('/show_detail_upja/{upja_id}',array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_detail_upja' ) );
   Route::get('/show_all_alsin',array('middleware' => 'cors', 'uses' => 'Farmer_Controller@show_all_alsin' ) );
@@ -219,5 +219,6 @@ Route::group(['prefix' => 'master'],function ()
     Route::post('/change_status_jadwal_uji', array('middleware' => 'cors', 'uses' => 'master_controller@change_status_jadwal_uji' ));
     Route::post('/upload_kode_billing', array('middleware' => 'cors', 'uses' => 'master_controller@upload_kode_billing' ));
     Route::post('/upload_hasil_laporan', array('middleware' => 'cors', 'uses' => 'master_controller@upload_hasil_laporan' ));
+    Route::post('/download_zip_file', array('middleware' => 'cors', 'uses' => 'master_controller@download_zip_file' ));
   });
 });

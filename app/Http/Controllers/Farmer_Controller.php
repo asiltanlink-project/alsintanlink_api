@@ -318,6 +318,32 @@ class Farmer_Controller extends Controller
     return array('status' => 1 ,'result'=>$final);
   }
 
+  public function show_upja_v2(Request $request ){
+
+    $upja = null;
+
+    if($request->village_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('village', $request->village_id )
+              ->get();
+    }else  if($request->village_id == null && $request->district_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('district', $request->district_id )
+              ->get();
+    }else  if($request->district_id == null && $request->city_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('city', $request->city_id )
+              ->get();
+    }else  if($request->city_id == null && $request->province_id != null){
+      $upja = Upja::select('id','name','leader_name','class')
+              ->where('province', $request->province_id )
+              ->get();
+    }
+
+    $final = array('upjas'=>$upja);
+    return array('status' => 1 ,'result'=>$final);
+  }
+
   public function show_detail_upja(Request $request ){
 
     $check_upja = Helper::check_upja($request->upja_id);

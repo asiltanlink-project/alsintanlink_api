@@ -87,6 +87,7 @@ class master_controller extends Controller
                             ")
                             )
                           ->orderBy('is_admin_action','desc')
+                          ->orderBy('id','asc')
                           ->paginate(10);
     }else{
        $lab_uji = lab_uji::select('lab_ujis.*', 
@@ -97,7 +98,8 @@ class master_controller extends Controller
                                 ) as is_admin_action
                             ")       )
                           ->orderBy('is_admin_action','desc')
-                          ->where('is_admin_action','>',0)
+                          ->having('is_admin_action','>',0)
+                          ->orderBy('id','asc')
                           ->paginate(10);
     }
 
@@ -293,7 +295,7 @@ class master_controller extends Controller
 
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id', $request->lab_uji_id )->first();
       $company_type->ktp = $request->ktp;
-      $company_type->manual_book = $request->manual_book;
+      $company_type->npwp = $request->npwp;
       
       if($request->verif == 1){
         $company_type->verif = 1;
@@ -459,6 +461,7 @@ class master_controller extends Controller
       $jadwal_uji = new transaction_lab_uji_jadwal_uji;
       $jadwal_uji->lab_uji_id = $request->lab_uji_id;
       $jadwal_uji->form_uji_id = $request->form_uji_id;
+      $lab_uji_form->status_journey = 3;
     }
     $jadwal_uji->tim_uji = $request->tim_uji;
     $jadwal_uji->waktu_uji_lab = $request->waktu_uji_lab;
@@ -468,7 +471,6 @@ class master_controller extends Controller
 
     $lab_uji_form = transaction_lab_uji_form::where('id', $request->form_uji_id )->
                                               first();
-    $lab_uji_form->status_journey = 3;
     $lab_uji_form->is_admin_action = 0;
     $lab_uji_form->save();
 
@@ -631,5 +633,25 @@ class master_controller extends Controller
     if(file_exists($url)){
       unlink($url);
     }
+  }
+
+  
+  public function download_zip_file(Request $request){
+
+    $zip_file = 'invoices.zip'; // Name of our archive to download
+
+    // Initializing PHP class
+    $zip = new \ZipArchive();
+    $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+    $invoice_file = 'public/lab_uji_upload/doc/perorangan/ktp/ApwwXvVj4xkY76Ifds1SQWuoGYjTl0Q0GFkCpynT.pdf';
+
+    // // Adding file: second parameter is what will the path inside of the archive
+    // // So it will create another folder called "storage/" inside ZIP, and put the file there.
+    $zip->addFile(storage_path($invoice_file), $invoice_file);
+    $zip->close();
+
+    // // We return the file immediately after download
+    return response()->download($zip_file);
   }
 }

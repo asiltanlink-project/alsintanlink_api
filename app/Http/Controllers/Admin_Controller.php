@@ -84,17 +84,39 @@ class Admin_Controller extends Controller
 
   public function show_upja(Request $request ){
 
-    $check_district = Helper::check_village($request->village_id);
+    if($request->village_id != null){
 
-    if($check_district == null){
-      $final = array('message'=> "kecamatan tidak ditemukan");
-      return array('status' => 0 ,'result'=>$final);
+        $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
+                                )
+                            ->where('village', $request->village_id )
+                            ->paginate(10);
+
+    }else  if($request->village_id == null && $request->district_id != null){
+
+        $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
+                                )
+                            ->where('district', $request->district_id )
+                            ->paginate(10);
+
+    }else  if($request->district_id == null && $request->city_id != null){
+
+        $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
+                                )
+                            ->where('city', $request->city_id )
+                            ->paginate(10);
+
+    }else  if($request->city_id == null && $request->province_id != null){
+
+        $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
+                                )
+                            ->where('province', $request->province_id )
+                            ->paginate(10);
+    }else{
+
+      $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
+                    )
+                ->paginate(10);
     }
-
-    $upja = Upja::select('id as upja_id','name as upja_name','leader_name','class'
-                        )
-                    ->where('village', $request->village_id )
-                    ->paginate(10);
 
     $max_page = round($upja->total() / 10);
     $current_page =$upja->currentPage();
@@ -206,16 +228,33 @@ class Admin_Controller extends Controller
 
   public function show_farmer(Request $request ){
 
-    $check_district = Helper::check_village($request->village_id);
+    if($request->village_id != null){
 
-    if($check_district == null){
-      $final = array('message'=> "kecamatan tidak ditemukan");
-      return array('status' => 0 ,'result'=>$final);
+      $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
+                ->where('village', $request->village_id )
+                ->paginate(10);
+
+    }else  if($request->village_id == null && $request->district_id != null){
+ 
+      $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
+                ->where('district', $request->district_id )
+                ->paginate(10);
+    }else  if($request->district_id == null && $request->city_id != null){
+
+      $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
+                  ->where('city', $request->city_id )
+                  ->paginate(10);
+
+    }else  if($request->city_id == null && $request->province_id != null){
+
+        $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
+                  ->where('province', $request->province_id )
+                  ->paginate(10);
+    }else{
+      $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
+                  ->paginate(10);
     }
 
-    $farmers = Farmer::select('id as farmer_id','name as farmer_name','phone_number','phone_verify')
-                    ->where('village', $request->village_id )
-                    ->paginate(10);
     $max_page = round($farmers->total() / 10);
     $current_page =$farmers->currentPage();
     if($max_page == 0){

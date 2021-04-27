@@ -1349,17 +1349,17 @@ class Upja_Controller extends Controller
                                )
                       ->Join ('alsins', 'alsins.id', '=', 'alsin_items.alsin_id')
                       ->Join ('alsin_types', 'alsin_types.id', '=', 'alsins.alsin_type_id')
-                      // ->whereIn('alsin_types.id',
-                      //           DB::table('transaction_order_types')
-                      //           ->select('alsin_types.id')
-                      //           ->Join ('alsin_types', 'alsin_types.id', '=',
-                      //                   'transaction_order_types.alsin_type_id')
-                      //           ->Where('transaction_order_types.transaction_order_id',
-                      //                   $request->transaction_order_id )
-                      //    )
+                      ->whereIn('alsin_types.id',
+                                DB::table('transaction_order_types')
+                                ->select('alsin_types.id')
+                                ->Join ('alsin_types', 'alsin_types.id', '=',
+                                        'transaction_order_types.alsin_type_id')
+                                ->Where('transaction_order_types.transaction_order_id',
+                                        $request->transaction_order_id )
+                         )
                       ->where('alsin_types.name', 'like', '%' . $request->keyword_alsin_item . '%')
                       ->Where('alsin_items.status','Tersedia')
-                      ->Where('alsins.upja_id', $user_id)
+                      // ->Where('alsins.upja_id', $user_id)
                       ->Paginate(10);
 
     $alsins->setPath(env('APP_URL') . '/api/upja/show_form_pricing?transaction_order_id=' .
