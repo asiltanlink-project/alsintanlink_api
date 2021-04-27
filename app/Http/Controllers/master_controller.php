@@ -460,7 +460,7 @@ class master_controller extends Controller
       $jadwal_uji = new transaction_lab_uji_jadwal_uji;
       $jadwal_uji->lab_uji_id = $request->lab_uji_id;
       $jadwal_uji->form_uji_id = $request->form_uji_id;
-      $lab_uji_form->status_journey = 3;
+      $jadwal_uji->status_journey = 3;
     }
     $jadwal_uji->tim_uji = $request->tim_uji;
     $jadwal_uji->waktu_uji_lab = $request->waktu_uji_lab;
