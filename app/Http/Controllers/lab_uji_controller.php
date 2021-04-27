@@ -201,7 +201,7 @@ class lab_uji_controller extends Controller
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id', $user_id )->first();
       if($company_type!=null){
         $company_type->url_ktp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp;
-        $company_type->url_manual_book = env('APP_URL') . '/public/storage/lab_uji_upload/doc/perorangan/manual_book/' . $company_type->url_manual_book;
+        $company_type->url_npwp = env('APP_URL') . '/public/storage/lab_uji_upload/doc/perorangan/npwp/' . $company_type->url_npwp;
       }else{
         $company_type = null;
       }
