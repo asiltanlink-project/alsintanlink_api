@@ -652,21 +652,25 @@ class master_controller extends Controller
 
     if($lab_uji->company_type == 0){
 
-      $ktp= $lab_uji->url_ktp  ;
-      $npwp= $lab_uji->url_npwp  ;
+      $document = transaction_lab_uji_doc_perorangan::where('lab_uji_id' ,  $request->lab_uji_id)->first();
+  
+      $ktp= $document->url_ktp  ;
+      $npwp= $document->url_npwp  ;
       
       $zip->addFile(storage_path('app\public\lab_uji_upload\doc\perorangan\ktp\\' . $ktp) , 'ktp\\' .$ktp );
       $zip->addFile(storage_path('app\public\lab_uji_upload\doc\perorangan\npwp\\' . $npwp) , 'npwp\\' .$npwp );
       $zip->close();
     }else if($lab_uji->company_type == 1){
 
-      $ktp= $lab_uji->url_ktp  ;
-      $npwp= $lab_uji->url_npwp  ;
-      $surat_keterangan_domisili= $lab_uji->url_surat_keterangan_domisili  ;
-      $akte_pendirian_perusahaan= $lab_uji->url_akte_pendirian_perusahaan  ;
-      $siup= $lab_uji->url_siup  ;
-      $tdp= $lab_uji->url_tdp  ;
-      $surat_suku_cadang= $lab_uji->url_surat_suku_cadang  ;
+      $document = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id' ,  $request->lab_uji_id)->first();
+
+      $ktp= $document->url_ktp  ;
+      $npwp= $document->url_npwp  ;
+      $surat_keterangan_domisili= $document->url_surat_keterangan_domisili  ;
+      $akte_pendirian_perusahaan= $document->url_akte_pendirian_perusahaan  ;
+      $siup= $document->url_siup  ;
+      $tdp= $document->url_tdp  ;
+      $surat_suku_cadang= $document->url_surat_suku_cadang  ;
       
       $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\ktp\\' . $ktp) , 'ktp\\' .$ktp );
       $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\npwp\\' . $npwp) , 'npwp\\' .$npwp );
@@ -679,15 +683,17 @@ class master_controller extends Controller
       $zip->close();
     }else if($lab_uji->company_type == 2){
 
-      $ktp= $lab_uji->url_ktp  ;
-      $npwp= $lab_uji->url_npwp  ;
-      $surat_keterangan_domisili= $lab_uji->url_surat_keterangan_domisili  ;
-      $akte_pendirian_perusahaan= $lab_uji->url_akte_pendirian_perusahaan  ;
-      $siup= $lab_uji->url_siup  ;
-      $tdp= $lab_uji->url_tdp  ;
-      $surat_suku_cadang= $lab_uji->url_surat_suku_cadang  ;
-      $api= $lab_uji->url_api  ;
-      $surat_keagenan_negara= $lab_uji->url_surat_keagenan_negara  ;
+      $document = transaction_lab_uji_doc_import::where('lab_uji_id' ,  $request->lab_uji_id)->first();
+
+      $ktp= $document->url_ktp  ;
+      $npwp= $document->url_npwp  ;
+      $surat_keterangan_domisili= $document->url_surat_keterangan_domisili  ;
+      $akte_pendirian_perusahaan= $document->url_akte_pendirian_perusahaan  ;
+      $siup= $document->url_siup  ;
+      $tdp= $document->url_tdp  ;
+      $surat_suku_cadang= $document->url_surat_suku_cadang  ;
+      $api= $document->url_api  ;
+      $surat_keagenan_negara= $document->url_surat_keagenan_negara  ;
       
       $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\ktp\\' . $ktp) , 'ktp\\' .$ktp );
       $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\npwp\\' . $npwp) , 'npwp\\' .$npwp );
