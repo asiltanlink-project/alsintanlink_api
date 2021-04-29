@@ -609,7 +609,11 @@ class Farmer_Controller extends Controller
 
           $transaction_order_spare_part = new transaction_order_spare_part ;
           $transaction_order_spare_part->transaction_order_id = $transaction_order->id;
-          $transaction_order_spare_part->spare_part_id	 = $request->spare_parts[$i]['spare_part_id'];
+          $transaction_order_spare_part->alsin_type_id	 = $request->spare_parts[$i]['alsin_type_id'];
+          $transaction_order_spare_part->merek	 = $request->spare_parts[$i]['merek'];
+          $transaction_order_spare_part->type_model	 = $request->spare_parts[$i]['type_model'];
+          $transaction_order_spare_part->nama	 = $request->spare_parts[$i]['nama'];
+          $transaction_order_spare_part->jumlah	 = $request->spare_parts[$i]['jumlah'];
           $transaction_order_spare_part->save();
       }
     }

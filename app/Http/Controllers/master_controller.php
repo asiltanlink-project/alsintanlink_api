@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use Hash;
 use Config;
 use JWTAuth;
+use Response;
+use ZipArchive;
 use App\Models\master;
 use App\Models\lab_uji;
 use Illuminate\Http\Request;
@@ -642,19 +644,64 @@ class master_controller extends Controller
   public function download_zip_file(Request $request){
 
     $zip_file = 'invoices.zip'; // Name of our archive to download
-
     // Initializing PHP class
-    $zip = new \ZipArchive();
-    $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+    $zip = new ZipArchive;
+    $zip->open( storage_path($zip_file) , ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
-    $invoice_file = 'public/lab_uji_upload/doc/perorangan/ktp/ApwwXvVj4xkY76Ifds1SQWuoGYjTl0Q0GFkCpynT.pdf';
+    $lab_uji = lab_uji::find( $request->lab_uji_id );
 
-    // // Adding file: second parameter is what will the path inside of the archive
-    // // So it will create another folder called "storage/" inside ZIP, and put the file there.
-    $zip->addFile(storage_path($invoice_file), $invoice_file);
-    $zip->close();
+    if($lab_uji->company_type == 0){
 
-    // // We return the file immediately after download
-    return response()->download($zip_file);
+      $ktp= $lab_uji->url_ktp  ;
+      $npwp= $lab_uji->url_npwp  ;
+      
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\perorangan\ktp\\' . $ktp) , 'ktp\\' .$ktp );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\perorangan\npwp\\' . $npwp) , 'npwp\\' .$npwp );
+      $zip->close();
+    }else if($lab_uji->company_type == 1){
+
+      $ktp= $lab_uji->url_ktp  ;
+      $npwp= $lab_uji->url_npwp  ;
+      $surat_keterangan_domisili= $lab_uji->url_surat_keterangan_domisili  ;
+      $akte_pendirian_perusahaan= $lab_uji->url_akte_pendirian_perusahaan  ;
+      $siup= $lab_uji->url_siup  ;
+      $tdp= $lab_uji->url_tdp  ;
+      $surat_suku_cadang= $lab_uji->url_surat_suku_cadang  ;
+      
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\ktp\\' . $ktp) , 'ktp\\' .$ktp );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\npwp\\' . $npwp) , 'npwp\\' .$npwp );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\surat_keterangan_domisili\\' . $surat_keterangan_domisili) , 'surat_keterangan_domisili\\' .$surat_keterangan_domisili );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\akte_pendirian_perusahaan\\' . $akte_pendirian_perusahaan) , 'akte_pendirian_perusahaan\\' .$akte_pendirian_perusahaan );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\siup\\' . $siup) , 'siup\\' .$siup );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\tdp\\' . $tdp) , 'tdp\\' .$tdp );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\dalam_negeri\surat_suku_cadang\\' . $surat_suku_cadang) , 'surat_suku_cadang\\' .$surat_suku_cadang );
+
+      $zip->close();
+    }else if($lab_uji->company_type == 2){
+
+      $ktp= $lab_uji->url_ktp  ;
+      $npwp= $lab_uji->url_npwp  ;
+      $surat_keterangan_domisili= $lab_uji->url_surat_keterangan_domisili  ;
+      $akte_pendirian_perusahaan= $lab_uji->url_akte_pendirian_perusahaan  ;
+      $siup= $lab_uji->url_siup  ;
+      $tdp= $lab_uji->url_tdp  ;
+      $surat_suku_cadang= $lab_uji->url_surat_suku_cadang  ;
+      $api= $lab_uji->url_api  ;
+      $surat_keagenan_negara= $lab_uji->url_surat_keagenan_negara  ;
+      
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\ktp\\' . $ktp) , 'ktp\\' .$ktp );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\npwp\\' . $npwp) , 'npwp\\' .$npwp );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\surat_keterangan_domisili\\' . $surat_keterangan_domisili) , 'surat_keterangan_domisili\\' .$surat_keterangan_domisili );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\akte_pendirian_perusahaan\\' . $akte_pendirian_perusahaan) , 'akte_pendirian_perusahaan\\' .$akte_pendirian_perusahaan );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\siup\\' . $siup) , 'siup\\' .$siup );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\tdp\\' . $tdp) , 'tdp\\' .$tdp );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\surat_suku_cadang\\' . $surat_suku_cadang) , 'surat_suku_cadang\\' .$surat_suku_cadang );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\api\\' . $api) , 'api\\' .$api );
+      $zip->addFile(storage_path('app\public\lab_uji_upload\doc\import\surat_keagenan_negara\\' . $surat_keagenan_negara) , 'surat_keagenan_negara\\' .$surat_keagenan_negara );
+
+      $zip->close();
+    }
+        
+    return Response::download( storage_path($zip_file) , 'lab_uji_' . $request->lab_uji_id  . '_' . $lab_uji->email . '.zip'  );
   }
 }

@@ -207,7 +207,7 @@ Route::group(['prefix' => 'lab_uji'],function ()
 Route::group(['prefix' => 'master'],function ()
 {
   Route::post('/login', array('middleware' => 'cors', 'uses' => 'master_controller@login' ));
-
+  Route::get('/download_zip_file', array('middleware' => 'cors', 'uses' => 'master_controller@download_zip_file' ));
   Route::group(['middleware' => ['assign.guard:master','jwt.master']],function ()
   {
     Route::get('/show_lab_uji', array('middleware' => 'cors', 'uses' => 'master_controller@show_lab_uji' ));
@@ -219,6 +219,6 @@ Route::group(['prefix' => 'master'],function ()
     Route::post('/change_status_jadwal_uji', array('middleware' => 'cors', 'uses' => 'master_controller@change_status_jadwal_uji' ));
     Route::post('/upload_kode_billing', array('middleware' => 'cors', 'uses' => 'master_controller@upload_kode_billing' ));
     Route::post('/upload_hasil_laporan', array('middleware' => 'cors', 'uses' => 'master_controller@upload_hasil_laporan' ));
-    Route::post('/download_zip_file', array('middleware' => 'cors', 'uses' => 'master_controller@download_zip_file' ));
+    
   });
 });
