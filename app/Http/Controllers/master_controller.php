@@ -125,6 +125,8 @@ class master_controller extends Controller
           if($doc != null){
             if($doc->verif == 0){
               $lab_uji[$i]->is_admin_action += 1;
+            }else if($doc->is_download == 1){
+              $lab_uji[$i]->is_admin_action += 1;
             }
           }
         }
@@ -138,6 +140,8 @@ class master_controller extends Controller
           if($doc != null){
             if($doc->verif == 0){
               $lab_uji[$i]->is_admin_action += 1;
+            }else if($doc->is_download == 1){
+              $lab_uji[$i]->is_admin_action += 1;
             }
           }
         }
@@ -150,6 +154,8 @@ class master_controller extends Controller
 
           if($doc != null){
             if($doc->verif == 0){
+              $lab_uji[$i]->is_admin_action += 1;
+            }else if($doc->is_download == 1){
               $lab_uji[$i]->is_admin_action += 1;
             }
           }
@@ -292,6 +298,11 @@ class master_controller extends Controller
       return array('status' => 0 ,'result'=>$final);
     }
 
+    // $zip_file = 'invoices.zip'; // Name of our archive to download
+    // // Initializing PHP class
+    // $zip = new ZipArchive;
+    // $zip->open( storage_path($zip_file) , ZipArchive::CREATE | ZipArchive::OVERWRITE );
+
     if($lab_uji->company_type == 0){
 
       $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id', $request->lab_uji_id )->first();
@@ -300,6 +311,17 @@ class master_controller extends Controller
       
       if($request->verif == 1){
         $company_type->verif = 1;
+        $company_type->is_download = 1;
+  
+        $ktp= $company_type->url_ktp  ;
+        $npwp= $company_type->url_npwp  ;
+        
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/perorangan/ktp/' . $ktp) , 'ktp/' .$ktp );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/perorangan/npwp/' . $npwp) , 'npwp/' .$npwp );
+        // $zip->close();
+  
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/ktp/' . $company_type->url_ktp) , $company_type->url_ktp);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/npwp/' . $company_type->url_npwp) , $company_type->url_npwp);
 
         $tokenList = DB::table('transaction_notif_token_labs')
                       ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
@@ -337,9 +359,34 @@ class master_controller extends Controller
       $company_type->surat_suku_cadang = $request->surat_suku_cadang;
       $company_type->manual_book = $request->manual_book;
 
-
       if($request->verif == 1){
         $company_type->verif = 1;
+        $company_type->is_download = 1;
+
+        // $ktp= $company_type->url_ktp  ;
+        // $npwp= $company_type->url_npwp  ;
+        // $surat_keterangan_domisili= $company_type->url_surat_keterangan_domisili  ;
+        // $akte_pendirian_perusahaan= $company_type->url_akte_pendirian_perusahaan  ;
+        // $siup= $company_type->url_siup  ;
+        // $tdp= $company_type->url_tdp  ;
+        // $surat_suku_cadang= $company_type->url_surat_suku_cadang  ;
+        
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/ktp/' . $ktp) , 'ktp/' .$ktp );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/npwp/' . $npwp) , 'npwp/' .$npwp );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $surat_keterangan_domisili) , 'surat_keterangan_domisili/' .$surat_keterangan_domisili );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $akte_pendirian_perusahaan) , 'akte_pendirian_perusahaan/' .$akte_pendirian_perusahaan );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/siup/' . $siup) , 'siup/' .$siup );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/tdp/' . $tdp) , 'tdp/' .$tdp );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $surat_suku_cadang) , 'surat_suku_cadang/' .$surat_suku_cadang );
+        // $zip->close();
+
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan) , $company_type->url_akte_pendirian_perusahaan);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\ktp/' . $company_type->url_ktp) , $company_type->url_ktp);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\npwp/' . $company_type->url_npwp) , $company_type->url_npwp);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili) , $company_type->url_surat_keterangan_domisili);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\siup/' . $company_type->url_siup) , $company_type->url_siup);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\tdp/' . $company_type->url_tdp) , $company_type->url_tdp);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\surat_suku_cadang/' . $company_type->url_surat_suku_cadang) , $company_type->url_surat_suku_cadang);
 
         $tokenList = DB::table('transaction_notif_token_labs')
                       ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
@@ -379,9 +426,40 @@ class master_controller extends Controller
       $company_type->surat_keagenan_negara = $request->surat_keagenan_negara;
       $company_type->surat_suku_cadang = $request->surat_suku_cadang;
 
-
       if($request->verif == 1){
         $company_type->verif = 1;
+        $company_type->is_download = 1;
+        
+        // $ktp= $company_type->url_ktp  ;
+        // $npwp= $company_type->url_npwp  ;
+        // $surat_keterangan_domisili= $company_type->url_surat_keterangan_domisili  ;
+        // $akte_pendirian_perusahaan= $company_type->url_akte_pendirian_perusahaan  ;
+        // $siup= $company_type->url_siup  ;
+        // $tdp= $company_type->url_tdp  ;
+        // $surat_suku_cadang= $company_type->url_surat_suku_cadang  ;
+        // $api= $company_type->url_api  ;
+        // $surat_keagenan_negara= $company_type->url_surat_keagenan_negara  ;
+
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/ktp/' . $ktp) , 'ktp/' .$ktp );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/npwp/' . $npwp) , 'npwp/' .$npwp );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $surat_keterangan_domisili) , 'surat_keterangan_domisili/' .$surat_keterangan_domisili );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $akte_pendirian_perusahaan) , 'akte_pendirian_perusahaan/' .$akte_pendirian_perusahaan );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/siup/' . $siup) , 'siup/' .$siup );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/tdp/' . $tdp) , 'tdp/' .$tdp );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/surat_suku_cadang/' . $surat_suku_cadang) , 'surat_suku_cadang/' .$surat_suku_cadang );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/api/' . $api) , 'api/' .$api );
+        // $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/surat_keagenan_negara/' . $surat_keagenan_negara) , 'surat_keagenan_negara/' .$surat_keagenan_negara );
+        // $zip->close();
+
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan) , $company_type->url_akte_pendirian_perusahaan);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/api/' . $company_type->url_api) , $company_type->url_api);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp) , $company_type->url_ktp);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp) , $company_type->url_npwp);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili) ,$company_type->url_surat_keterangan_domisili);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/siup/' . $company_type->url_siup) , $company_type->url_siup);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp) , $company_type->url_tdp);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang) ,$company_type->url_surat_suku_cadang);
+        // $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara) , $company_type->url_surat_keagenan_negara);
 
         $tokenList = DB::table('transaction_notif_token_labs')
                       ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
@@ -408,6 +486,7 @@ class master_controller extends Controller
     }
 
     $final = array('message'=> "menerima dokumen berhasil");
+    // return Response::download( storage_path($zip_file) , 'lab_uji_' . $request->lab_uji_id  . '_' . $lab_uji->email . '.zip'  );
     return array('status' => 1,'result'=>$final);
   }
 
@@ -646,16 +725,16 @@ class master_controller extends Controller
     $zip_file = 'invoices.zip'; // Name of our archive to download
     // Initializing PHP class
     $zip = new ZipArchive;
-    
     $zip->open( storage_path($zip_file) , ZipArchive::CREATE | ZipArchive::OVERWRITE );
-    //dd(storage_path($zip_file));
    
     $lab_uji = lab_uji::find( $request->lab_uji_id );
     
     if($lab_uji->company_type == 0){
 
       $document = transaction_lab_uji_doc_perorangan::where('lab_uji_id' ,  $request->lab_uji_id)->first();
-  
+      $document->is_download = 0;
+      $document->save();
+
       $ktp= $document->url_ktp  ;
       $npwp= $document->url_npwp  ;
       
@@ -665,10 +744,12 @@ class master_controller extends Controller
 
       $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/ktp/' . $document->url_ktp) , $document->url_ktp);
       $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/npwp/' . $document->url_npwp) , $document->url_npwp);
-
+      
     }else if($lab_uji->company_type == 1){
 
       $document = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id' ,  $request->lab_uji_id)->first();
+      $document->is_download = 0;
+      $document->save();
 
       $ktp= $document->url_ktp  ;
       $npwp= $document->url_npwp  ;
@@ -698,7 +779,9 @@ class master_controller extends Controller
     }else if($lab_uji->company_type == 2){
 
       $document = transaction_lab_uji_doc_import::where('lab_uji_id' ,  $request->lab_uji_id)->first();
-	
+    	$document->is_download = 0;
+      $document->save();
+      
       $ktp= $document->url_ktp  ;
       $npwp= $document->url_npwp  ;
       $surat_keterangan_domisili= $document->url_surat_keterangan_domisili  ;
