@@ -721,14 +721,14 @@ class master_controller extends Controller
       $zip->close();
 
       $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $document->url_akte_pendirian_perusahaan) , $document->url_akte_pendirian_perusahaan);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/api\\' . $document->url_api) , $document->url_api);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/ktp\\' . $document->url_ktp) , $document->url_ktp);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/npwp\\' . $document->url_npwp) , $document->url_npwp);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keterangan_domisili\\' . $document->url_surat_keterangan_domisili) ,$document->url_surat_keterangan_domisili);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/siup\\' . $document->url_siup) , $document->url_siup);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/tdp\\' . $document->url_tdp) , $document->url_tdp);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_suku_cadang\\' . $document->url_surat_suku_cadang) ,$document->url_surat_suku_cadang);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keagenan_negara\\' . $document->url_surat_keagenan_negara) , $document->url_surat_keagenan_negara);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/api/' . $document->url_api) , $document->url_api);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/ktp/' . $document->url_ktp) , $document->url_ktp);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/npwp/' . $document->url_npwp) , $document->url_npwp);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $document->url_surat_keterangan_domisili) ,$document->url_surat_keterangan_domisili);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/siup/' . $document->url_siup) , $document->url_siup);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/tdp/' . $document->url_tdp) , $document->url_tdp);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_suku_cadang/' . $document->url_surat_suku_cadang) ,$document->url_surat_suku_cadang);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keagenan_negara/' . $document->url_surat_keagenan_negara) , $document->url_surat_keagenan_negara);
 
     }
         

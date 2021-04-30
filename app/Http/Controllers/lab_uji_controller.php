@@ -695,31 +695,31 @@ class lab_uji_controller extends Controller
         $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $company_type->url_akte_pendirian_perusahaan) , $company_type->url_akte_pendirian_perusahaan);
       }
       if($company_type->api == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/api\\' . $company_type->url_api) , $company_type->url_api);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/api/' . $company_type->url_api) , $company_type->url_api);
       }
     //   if($company_type->manual_book == 0){
     //     $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/manual_book\\' . $company_type->url_manual_book) , $company_type->url_manual_book);
     //  }
       if($company_type->ktp == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/ktp\\' . $company_type->url_ktp) , $company_type->url_ktp);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/ktp/' . $company_type->url_ktp) , $company_type->url_ktp);
       }
       if($company_type->npwp == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/npwp\\' . $company_type->url_npwp) , $company_type->url_npwp);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/npwp/' . $company_type->url_npwp) , $company_type->url_npwp);
       }
       if($company_type->surat_keterangan_domisili == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keterangan_domisili\\' . $company_type->url_surat_keterangan_domisili) ,$company_type->url_surat_keterangan_domisili);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keterangan_domisili/' . $company_type->url_surat_keterangan_domisili) ,$company_type->url_surat_keterangan_domisili);
       }
       if($company_type->siup == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/siup\\' . $company_type->url_siup) , $company_type->url_siup);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/siup/' . $company_type->url_siup) , $company_type->url_siup);
       }
       if($company_type->tdp == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/tdp\\' . $company_type->url_tdp) , $company_type->url_tdp);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/tdp/' . $company_type->url_tdp) , $company_type->url_tdp);
       }
       if($company_type->surat_suku_cadang == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_suku_cadang\\' . $company_type->url_surat_suku_cadang) ,$company_type->url_surat_suku_cadang);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_suku_cadang/' . $company_type->url_surat_suku_cadang) ,$company_type->url_surat_suku_cadang);
       }
      if($company_type->surat_keagenan_negara == 0){
-        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keagenan_negara\\' . $company_type->url_surat_keagenan_negara) , $company_type->url_surat_keagenan_negara);
+        $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/surat_keagenan_negara/' . $company_type->url_surat_keagenan_negara) , $company_type->url_surat_keagenan_negara);
       }
        
     }
