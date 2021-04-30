@@ -208,6 +208,8 @@ Route::group(['prefix' => 'master'],function ()
 {
   Route::post('/login', array('middleware' => 'cors', 'uses' => 'master_controller@login' ));
   Route::get('/download_zip_file', array('middleware' => 'cors', 'uses' => 'master_controller@download_zip_file' ));
+  Route::get('/clear_zip_file', array('middleware' => 'cors', 'uses' => 'master_controller@clear_zip_file' ));
+
   Route::group(['middleware' => ['assign.guard:master','jwt.master']],function ()
   {
     Route::get('/show_lab_uji', array('middleware' => 'cors', 'uses' => 'master_controller@show_lab_uji' ));

@@ -77,96 +77,93 @@ class master_controller extends Controller
       }
     }
 
-  public function show_lab_uji(Request $request){
+    public function show_lab_uji(Request $request){
  
-    if($request->verify == null){
-      $lab_uji = lab_uji::select('lab_ujis.*', 
-                                  DB::raw("(select count(transaction_lab_uji_forms.id)
-                                  FROM transaction_lab_uji_forms
-                                  WHERE (transaction_lab_uji_forms.lab_uji_id = lab_ujis.id)
-                                  AND (transaction_lab_uji_forms.is_admin_action = 1)
-                                ) as is_admin_action
-                            ")
-                            )
-                          ->orderBy('is_admin_action','desc')
-                          ->orderBy('id','asc')
-                          ->paginate(10);
-    }else{
-       $lab_uji = lab_uji::select('lab_ujis.*', 
-                                  DB::raw("(select count(transaction_lab_uji_forms.id)
-                                  FROM transaction_lab_uji_forms
-                                  WHERE (transaction_lab_uji_forms.lab_uji_id = lab_ujis.id)
-                                  AND (transaction_lab_uji_forms.is_admin_action = 1)
-                                ) as is_admin_action
-                            ")       )
-                          ->orderBy('is_admin_action','desc')
-                          ->having('is_admin_action','>',0)
-                          ->orderBy('id','asc')
-                          ->paginate(10);
-    }
-
-    $max_page = $lab_uji->lastPage();
-    $current_page =$lab_uji->currentPage();
-    if($max_page == 0){
-      $max_page = 1;
-    }
-
-    for ($i=0; $i < sizeof( $lab_uji ) ; $i++) { 
-      
-      if($lab_uji[$i]->company_type != -1){
    
-        if($lab_uji[$i]->company_type == 0 ){
+  $lab_uji = lab_uji::select('lab_ujis.*', 
+                              DB::raw("(select count(transaction_lab_uji_forms.id)
+                              FROM transaction_lab_uji_forms
+                              WHERE (transaction_lab_uji_forms.lab_uji_id = lab_ujis.id)
+                              AND (transaction_lab_uji_forms.is_admin_action = 1)
+                            ) as is_admin_action
+                        ")       )
+                      ->orderBy('is_admin_action','desc')
+                      ->orderBy('id','asc')
+                      ->paginate(10);
+   
+
+   $max_page = $lab_uji->lastPage();
+   $current_page =$lab_uji->currentPage();
+   if($max_page == 0){
+     $max_page = 1;
+   }
+
+   for ($i=0; $i < sizeof( $lab_uji ) ; $i++) { 
      
-          $doc = DB::table('transaction_lab_uji_doc_perorangans')
+     if($lab_uji[$i]->company_type != -1){
+  
+       if($lab_uji[$i]->company_type == 0 ){
+    
+         $doc = DB::table('transaction_lab_uji_doc_perorangans')
+                 ->select('verif' , 'is_download' )
+                 ->Where('lab_uji_id', $lab_uji[$i]->id )
+                 ->first();
+                
+         if($doc != null){
+           if($doc->verif == 0){
+             $lab_uji[$i]->is_admin_action += 1;
+           }else if($doc->is_download == 1){
+             $lab_uji[$i]->is_admin_action += 1;
+           }
+         }
+       }
+       if($lab_uji[$i]->company_type == 1){
+         
+         $doc =  DB::table('transaction_lab_uji_doc_dalam_negeris')
+                 ->select('verif' , 'is_download' )
+                 ->Where('lab_uji_id', $lab_uji[$i]->id )
+                 ->first();
+
+         if($doc != null){
+           if($doc->verif == 0){
+             $lab_uji[$i]->is_admin_action += 1;
+           }else if($doc->is_download == 1){
+             $lab_uji[$i]->is_admin_action += 1;
+           }
+         }
+       }
+       if($lab_uji[$i]->company_type == 2){
+         
+         $doc = DB::table('transaction_lab_uji_doc_imports')
                   ->select('verif' , 'is_download' )
-                  ->Where('lab_uji_id', $lab_uji[$i]->id )
-                  ->first();
-                 
-          if($doc != null){
-            if($doc->verif == 0){
-              $lab_uji[$i]->is_admin_action += 1;
-            }else if($doc->is_download == 1){
-              $lab_uji[$i]->is_admin_action += 1;
-            }
-          }
-        }
-        if($lab_uji[$i]->company_type == 1){
-          
-          $doc =  DB::table('transaction_lab_uji_doc_dalam_negeris')
-                  ->select('verif' , 'is_download' )
-                  ->Where('lab_uji_id', $lab_uji[$i]->id )
-                  ->first();
+                 ->Where('lab_uji_id', $lab_uji[$i]->id )
+                 ->first();
 
-          if($doc != null){
-            if($doc->verif == 0){
-              $lab_uji[$i]->is_admin_action += 1;
-            }else if($doc->is_download == 1){
-              $lab_uji[$i]->is_admin_action += 1;
-            }
-          }
-        }
-        if($lab_uji[$i]->company_type == 2){
-          
-          $doc = DB::table('transaction_lab_uji_doc_imports')
-                   ->select('verif' , 'is_download' )
-                  ->Where('lab_uji_id', $lab_uji[$i]->id )
-                  ->first();
+         if($doc != null){
+           if($doc->verif == 0){
+             $lab_uji[$i]->is_admin_action += 1;
+           }else if($doc->is_download == 1){
+             $lab_uji[$i]->is_admin_action += 1;
+           }
+         }
+       }
+     }
+   }
+   
+   if($request->verify == 1){
 
-          if($doc != null){
-            if($doc->verif == 0){
-              $lab_uji[$i]->is_admin_action += 1;
-            }else if($doc->is_download == 1){
-              $lab_uji[$i]->is_admin_action += 1;
-            }
-          }
-        }
-      }
-    }
+     $final_lab_uji = $lab_uji->getCollection()->where('is_admin_action' , '>' , 0);
+     $final = array('lab_ujis'=> $lab_uji->setCollection($final_lab_uji),'max_page'=> $max_page,
+                  'current_page'=> $current_page);
+     return array('status' => 1,'result'=>$final);
 
-    $final = array('lab_ujis'=> $lab_uji,'max_page'=> $max_page,
-                   'current_page'=> $current_page);
-    return array('status' => 1,'result'=>$final);
-  }
+   }
+
+   $final = array('lab_ujis'=> $lab_uji,'max_page'=> $max_page,
+                  'current_page'=> $current_page);
+   return array('status' => 1,'result'=>$final);
+ }
+
 
   public function show_detail_lab_uji(Request $request){
 
@@ -732,7 +729,7 @@ class master_controller extends Controller
     if($lab_uji->company_type == 0){
 
       $document = transaction_lab_uji_doc_perorangan::where('lab_uji_id' ,  $request->lab_uji_id)->first();
-      $document->is_download = 0;
+      $document->is_download = 2;
       $document->save();
 
       $ktp= $document->url_ktp  ;
@@ -741,10 +738,7 @@ class master_controller extends Controller
       $zip->addFile(storage_path('app/public/lab_uji_upload/doc/perorangan/ktp/' . $ktp) , 'ktp/' .$ktp );
       $zip->addFile(storage_path('app/public/lab_uji_upload/doc/perorangan/npwp/' . $npwp) , 'npwp/' .$npwp );
       $zip->close();
-
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/ktp/' . $document->url_ktp) , $document->url_ktp);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/npwp/' . $document->url_npwp) , $document->url_npwp);
-      
+     
     }else if($lab_uji->company_type == 1){
 
       $document = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id' ,  $request->lab_uji_id)->first();
@@ -767,14 +761,6 @@ class master_controller extends Controller
       $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/tdp/' . $tdp) , 'tdp/' .$tdp );
       $zip->addFile(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $surat_suku_cadang) , 'surat_suku_cadang/' .$surat_suku_cadang );
       $zip->close();
-
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $document->url_akte_pendirian_perusahaan) , $document->url_akte_pendirian_perusahaan);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\ktp/' . $document->url_ktp) , $document->url_ktp);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\npwp/' . $document->url_npwp) , $document->url_npwp);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\surat_keterangan_domisili/' . $document->url_surat_keterangan_domisili) , $document->url_surat_keterangan_domisili);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\siup/' . $document->url_siup) , $document->url_siup);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\tdp/' . $document->url_tdp) , $document->url_tdp);
-      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri\surat_suku_cadang/' . $document->url_surat_suku_cadang) , $document->url_surat_suku_cadang);
 
     }else if($lab_uji->company_type == 2){
 
@@ -803,6 +789,64 @@ class master_controller extends Controller
       $zip->addFile(storage_path('app/public/lab_uji_upload/doc/import/surat_keagenan_negara/' . $surat_keagenan_negara) , 'surat_keagenan_negara/' .$surat_keagenan_negara );
       $zip->close();
 
+    }
+        
+    return Response::download( storage_path($zip_file) , 'lab_uji_' . $request->lab_uji_id  . '_' . $lab_uji->email . '.zip'  );
+  }
+
+
+  public function clear_zip_file(Request $request){
+
+  
+    $lab_uji = lab_uji::find( $request->lab_uji_id );
+    
+    if($lab_uji->company_type == 0){
+
+      $document = transaction_lab_uji_doc_perorangan::where('lab_uji_id' ,  $request->lab_uji_id)->first();
+      $document->is_download = 0;
+      $document->save();
+
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/ktp/' . $document->url_ktp) , $document->url_ktp);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/perorangan/npwp/' . $document->url_npwp) , $document->url_npwp);
+      
+    }else if($lab_uji->company_type == 1){
+
+      $document = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id' ,  $request->lab_uji_id)->first();
+      $document->is_download = 0;
+      $document->save();
+
+      $ktp= $document->url_ktp  ;
+      $npwp= $document->url_npwp  ;
+      $surat_keterangan_domisili= $document->url_surat_keterangan_domisili  ;
+      $akte_pendirian_perusahaan= $document->url_akte_pendirian_perusahaan  ;
+      $siup= $document->url_siup  ;
+      $tdp= $document->url_tdp  ;
+      $surat_suku_cadang= $document->url_surat_suku_cadang  ;
+
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/akte_pendirian_perusahaan/' . $document->url_akte_pendirian_perusahaan) , $document->url_akte_pendirian_perusahaan);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/ktp/' . $document->url_ktp) , $document->url_ktp);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/npwp/' . $document->url_npwp) , $document->url_npwp);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/surat_keterangan_domisili/' . $document->url_surat_keterangan_domisili) , $document->url_surat_keterangan_domisili);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/siup/' . $document->url_siup) , $document->url_siup);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/tdp/' . $document->url_tdp) , $document->url_tdp);
+      $this->delete_file(storage_path('app/public/lab_uji_upload/doc/dalam_negeri/surat_suku_cadang/' . $document->url_surat_suku_cadang) , $document->url_surat_suku_cadang);
+
+    }else if($lab_uji->company_type == 2){
+
+      $document = transaction_lab_uji_doc_import::where('lab_uji_id' ,  $request->lab_uji_id)->first();
+      $document->is_download = 0;
+      $document->save();
+      
+      $ktp= $document->url_ktp  ;
+      $npwp= $document->url_npwp  ;
+      $surat_keterangan_domisili= $document->url_surat_keterangan_domisili  ;
+      $akte_pendirian_perusahaan= $document->url_akte_pendirian_perusahaan  ;
+      $siup= $document->url_siup  ;
+      $tdp= $document->url_tdp  ;
+      $surat_suku_cadang= $document->url_surat_suku_cadang  ;
+      $api= $document->url_api  ;
+      $surat_keagenan_negara= $document->url_surat_keagenan_negara  ;
+
       $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/akte_pendirian_perusahaan/' . $document->url_akte_pendirian_perusahaan) , $document->url_akte_pendirian_perusahaan);
       $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/api/' . $document->url_api) , $document->url_api);
       $this->delete_file(storage_path('app/public/lab_uji_upload/doc/import/ktp/' . $document->url_ktp) , $document->url_ktp);
@@ -815,7 +859,8 @@ class master_controller extends Controller
 
     }
         
-    return Response::download( storage_path($zip_file) , 'lab_uji_' . $request->lab_uji_id  . '_' . $lab_uji->email . '.zip'  );
+    $final = array('message'=> "clear document berhasil");
+    return array('status' => 1,'result'=>$final);
   }
 
 }
