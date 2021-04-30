@@ -742,7 +742,7 @@ class master_controller extends Controller
     }else if($lab_uji->company_type == 1){
 
       $document = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id' ,  $request->lab_uji_id)->first();
-      $document->is_download = 0;
+      $document->is_download = 2;
       $document->save();
 
       $ktp= $document->url_ktp  ;
@@ -765,7 +765,7 @@ class master_controller extends Controller
     }else if($lab_uji->company_type == 2){
 
       $document = transaction_lab_uji_doc_import::where('lab_uji_id' ,  $request->lab_uji_id)->first();
-    	$document->is_download = 0;
+    	$document->is_download = 2;
       $document->save();
       
       $ktp= $document->url_ktp  ;
