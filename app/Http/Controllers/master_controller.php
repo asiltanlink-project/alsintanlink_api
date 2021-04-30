@@ -117,8 +117,8 @@ class master_controller extends Controller
    
         if($lab_uji[$i]->company_type == 0 ){
      
-          $doc = $alsins = DB::table('transaction_lab_uji_doc_perorangans')
-                  ->select('verif')
+          $doc = DB::table('transaction_lab_uji_doc_perorangans')
+                  ->select('verif, is_download')
                   ->Where('lab_uji_id', $lab_uji[$i]->id )
                   ->first();
                  
@@ -132,8 +132,8 @@ class master_controller extends Controller
         }
         if($lab_uji[$i]->company_type == 1){
           
-          $doc = $alsins = DB::table('transaction_lab_uji_doc_dalam_negeris')
-                  ->select('verif')
+          $doc =  DB::table('transaction_lab_uji_doc_dalam_negeris')
+                  ->select('verif, is_download')
                   ->Where('lab_uji_id', $lab_uji[$i]->id )
                   ->first();
 
@@ -147,8 +147,8 @@ class master_controller extends Controller
         }
         if($lab_uji[$i]->company_type == 2){
           
-          $doc = $alsins = DB::table('transaction_lab_uji_doc_imports')
-                  ->select('verif')
+          $doc = DB::table('transaction_lab_uji_doc_imports')
+                  ->select('verif, is_download')
                   ->Where('lab_uji_id', $lab_uji[$i]->id )
                   ->first();
 
