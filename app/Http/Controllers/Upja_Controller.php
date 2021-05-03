@@ -1433,9 +1433,7 @@ class Upja_Controller extends Controller
 
     $spare_part = transaction_order_spare_part::
                                         select('transaction_order_spare_parts.*'
-                                              , 'spare_parts.name', 'alsin_types.name as alsin_type_name')
-                                      ->Join ('spare_parts', 'spare_parts.id', '=',
-                                              'transaction_order_spare_parts.spare_part_id')
+                                              ,  'alsin_types.name as alsin_type_name')
                                       ->Join ('alsin_types', 'alsin_types.id', '=',
                                               'transaction_order_spare_parts.alsin_type_id')
                                       ->where('transaction_order_id',
