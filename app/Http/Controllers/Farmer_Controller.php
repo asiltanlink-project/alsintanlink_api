@@ -792,8 +792,8 @@ class Farmer_Controller extends Controller
     $transaction_order_spare_part = transaction_order_spare_part::
                                         select('transaction_order_spare_parts.*',
                                               'alsin_types.name as alsin_name',
-                                              'alsin_types.picture_detail as alsins_picture',
-                                              DB::raw("(select 1) as alsin_other, (select 'Spare Part') as alsin_type_name"))
+                                              DB::raw("(select 1) as alsin_other, (select 'Suku Cadang') as alsin_type_name, 
+                                                      (select 'https://alsintanlink.com/img/logo_new/suku_cadang.png') as alsins_picture"))
                                       ->Join ('alsin_types', 'alsin_types.id', '=',
                                               'transaction_order_spare_parts.alsin_type_id')
                                       ->where('transaction_order_id',
