@@ -790,13 +790,10 @@ class Farmer_Controller extends Controller
                                       ->get();
 
     $transaction_order_spare_part = transaction_order_spare_part::
-                                        select('transaction_order_spare_parts.*'
-                                              , 'spare_parts.name',
+                                        select('transaction_order_spare_parts.*',
                                               'alsin_types.name as alsin_name',
                                               'alsin_types.picture_detail as alsins_picture',
                                               DB::raw("(select 1) as alsin_other, (select 'Spare Part') as alsin_type_name"))
-                                      ->Join ('spare_parts', 'spare_parts.id', '=',
-                                              'transaction_order_spare_parts.spare_part_id')
                                       ->Join ('alsin_types', 'alsin_types.id', '=',
                                               'transaction_order_spare_parts.alsin_type_id')
                                       ->where('transaction_order_id',
