@@ -86,8 +86,8 @@ class master_controller extends Controller
                                         WHERE (transaction_lab_uji_forms.lab_uji_id = lab_ujis.id)
                                         AND (transaction_lab_uji_forms.is_admin_action = 1)
                                       ) as is_admin_action_form")   ,
-                              DB::raw("(CASE WHEN lab_ujis.verify = 0 THEN '1'
-                                      WHEN lab_ujis.verify = 1 THEN '0'
+                              DB::raw("(CASE WHEN lab_ujis.verif_doc = 0 THEN '1'
+                                      WHEN lab_ujis.verif_doc = 1 THEN '0'
                                       ELSE '0' END) as is_admin_action_verif"),
                               DB::raw("(select is_admin_action_form + is_admin_action_verif + lab_ujis.is_download) as is_admin_action")
                           )
@@ -259,8 +259,9 @@ class master_controller extends Controller
       $company_type->npwp = $request->npwp;
       
       if($request->verif == 1){
-
+        
         $lab_uji->is_download = 1;
+        $lab_uji->verif_doc = 1;
         $lab_uji->save();
         $company_type->verif = 1;
   
@@ -306,6 +307,7 @@ class master_controller extends Controller
       if($request->verif == 1){
         $company_type->verif = 1;
         $lab_uji->is_download = 1;
+        $lab_uji->verif_doc = 1;
         $lab_uji->save();
 
         $tokenList = DB::table('transaction_notif_token_labs')
@@ -349,6 +351,7 @@ class master_controller extends Controller
       if($request->verif == 1){
         $company_type->verif = 1;
         $lab_uji->is_download = 1;
+        $lab_uji->verif_doc = 1;
         $lab_uji->save();
         
         $tokenList = DB::table('transaction_notif_token_labs')
