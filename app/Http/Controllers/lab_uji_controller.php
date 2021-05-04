@@ -361,8 +361,10 @@ class lab_uji_controller extends Controller
       $lab_uji->company_number = $request->company_number;
       $lab_uji->company_status = $request->company_status;
       $lab_uji->company_type = 0;
-      $lab_uji->save();
     }
+
+    $lab_uji->need_verify_doc = 1;
+    $lab_uji->save();
 
     $company_type = transaction_lab_uji_doc_perorangan::where('lab_uji_id',$user_id)->first();
     if($company_type == null){
@@ -482,8 +484,10 @@ class lab_uji_controller extends Controller
       $lab_uji->company_number = $request->company_number;
       $lab_uji->company_status = $request->company_status;
       $lab_uji->company_type = 1;
-      $lab_uji->save();
     }
+
+    $lab_uji->need_verify_doc = 1;
+    $lab_uji->save();
 
     $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id',$user_id)->first();
     if($company_type == null){
@@ -680,8 +684,10 @@ class lab_uji_controller extends Controller
       $lab_uji->company_number = $request->company_number;
       $lab_uji->company_status = $request->company_status;
       $lab_uji->company_type = 2;
-      $lab_uji->save();
     }
+
+    $lab_uji->need_verify_doc = 1;
+    $lab_uji->save();
 
     $company_type = transaction_lab_uji_doc_import::where('lab_uji_id',$user_id)->first();
     if($company_type == null){
