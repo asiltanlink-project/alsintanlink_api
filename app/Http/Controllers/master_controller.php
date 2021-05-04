@@ -258,8 +258,6 @@ class master_controller extends Controller
       if($request->verif == 1){
         
         $lab_uji->is_download = 1;
-        $lab_uji->need_verify_doc = 0;
-        $lab_uji->save();
         $company_type->verif = 1;
   
         $ktp= $company_type->url_ktp  ;
@@ -288,6 +286,9 @@ class master_controller extends Controller
       $company_type->keterangan = $request->keterangan;
       $company_type->save();
 
+      $lab_uji->need_verify_doc = 0;
+      $lab_uji->save();
+
     }else if($lab_uji->company_type == 1){
 
       $company_type = transaction_lab_uji_doc_dalam_negeri::where('lab_uji_id', $request->lab_uji_id )->first();
@@ -304,8 +305,6 @@ class master_controller extends Controller
       if($request->verif == 1){
         $company_type->verif = 1;
         $lab_uji->is_download = 1;
-        $lab_uji->need_verify_doc = 0;
-        $lab_uji->save();
 
         $tokenList = DB::table('transaction_notif_token_labs')
                       ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
@@ -330,6 +329,9 @@ class master_controller extends Controller
       $company_type->keterangan = $request->keterangan;
       $company_type->save();
 
+      $lab_uji->need_verify_doc = 0;
+      $lab_uji->save();
+
     }else if($lab_uji->company_type == 2){
 
       $company_type = transaction_lab_uji_doc_import::where('lab_uji_id', $request->lab_uji_id )->first();
@@ -348,8 +350,6 @@ class master_controller extends Controller
       if($request->verif == 1){
         $company_type->verif = 1;
         $lab_uji->is_download = 1;
-        $lab_uji->need_verify_doc = 0;
-        $lab_uji->save();
         
         $tokenList = DB::table('transaction_notif_token_labs')
                       ->where('transaction_notif_token_labs.lab_uji_id', $request->lab_uji_id)
@@ -373,6 +373,9 @@ class master_controller extends Controller
       }
       $company_type->keterangan = $request->keterangan;
       $company_type->save();
+      
+      $lab_uji->need_verify_doc = 0;
+      $lab_uji->save();
     }
 
     $final = array('message'=> "menerima dokumen berhasil");
