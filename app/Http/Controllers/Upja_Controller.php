@@ -1359,7 +1359,7 @@ class Upja_Controller extends Controller
                          )
                       ->where('alsin_types.name', 'like', '%' . $request->keyword_alsin_item . '%')
                       ->Where('alsin_items.status','Tersedia')
-                      // ->Where('alsins.upja_id', $user_id)
+                      ->Where('alsins.upja_id', $user_id)
                       ->Paginate(10);
 
     $alsins->setPath(env('APP_URL') . '/api/upja/show_form_pricing?transaction_order_id=' .
