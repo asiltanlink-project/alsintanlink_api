@@ -19,7 +19,7 @@ use App\Models\District;
 class Village extends Model
 {
     use VillageTrait;
-
+    public $timestamps = false;
     /**
      * Table name.
      *

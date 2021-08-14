@@ -159,6 +159,7 @@ Route::group(['prefix' => 'admin'],function ()
     Route::get('/show_detail_upja', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_upja' ));
     Route::get('/show_detail_alsin', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_alsin' ));
     Route::get('/show_detail_alsin_item', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_detail_alsin_item' ));
+    Route::post('/add_new_location', array('middleware' => 'cors', 'uses' => 'Admin_Controller@add_new_location' ));
 
     // transaction
     Route::get('/show_all_transaction', array('middleware' => 'cors', 'uses' => 'Admin_Controller@show_all_transaction' ));

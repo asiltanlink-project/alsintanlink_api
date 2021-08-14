@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 class Regency extends Model
 {
     use RegencyTrait;
-
+    public $timestamps = false;
     /**
      * Table name.
      *

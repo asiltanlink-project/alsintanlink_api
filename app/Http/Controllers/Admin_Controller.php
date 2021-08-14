@@ -9,6 +9,9 @@ use Carbon\Carbon;
 use App\Models\Upja;
 use App\Models\Admin;
 use App\Models\Farmer;
+use App\Models\Village;
+use App\Models\District;
+use App\Models\Regency;
 use App\Mail\Upja_Alert;
 use Illuminate\Http\Request;
 use App\Models\spare_part;
@@ -1165,6 +1168,62 @@ class Admin_Controller extends Controller
     $spare_part->delete();
 
     $final = array('message'=> "delete berhasil");
+    return array('status' => 1 ,'result'=>$final);
+  }
+
+  public function add_new_location(Request $request ){
+
+    if($request->district_id != ""){
+
+        $last_village = DB::table('indoregion_villages')
+                            ->select('indoregion_villages.id' )
+                            ->orderBy('id','desc')
+                            ->first();
+      
+        $add = $last_village->id+1;
+
+        $new_location = new Village();
+        $new_location->id =  $add;
+        $new_location->district_id = $request->district_id;
+        $new_location->name = $request->name;
+        $new_location->save();
+
+    } else if($request->city_id != ""){
+
+      $last_village = DB::table('indoregion_districts')
+                      ->select('indoregion_districts.id' )
+                      ->orderBy('id','desc')
+                      ->first();
+
+      $add = $last_village->id+1;
+
+      $new_location = new District();
+      $new_location->id =  $add;
+      $new_location->regency_id = $request->city_id;
+      $new_location->name = $request->name;
+      $new_location->save();
+
+    } else if($request->province_id != ""){
+
+      $last_village = DB::table('indoregion_provinces')
+                      ->select('indoregion_provinces.id' )
+                      ->orderBy('id','desc')
+                      ->first();
+
+      $add = $last_village->id+1;
+
+      $new_location = new Regency();
+      $new_location->id =  $add;
+      $new_location->province_id = $request->province_id;
+      $new_location->name = $request->name;
+      $new_location->save();
+    }else{
+
+      $final = array('message'=> "create data gagal" );
+      return array('status' => 0 ,'result'=>$final);
+    }
+
+    $final = array('message'=> "create data berhasil");
     return array('status' => 1 ,'result'=>$final);
   }
 }

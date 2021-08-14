@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 class Province extends Model
 {
     use ProvinceTrait;
+    public $timestamps = false;
     /**
      * Table name.
      *
