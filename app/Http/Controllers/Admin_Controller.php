@@ -1205,8 +1205,8 @@ class Admin_Controller extends Controller
 
     } else if($request->province_id != ""){
 
-      $last_village = DB::table('indoregion_provinces')
-                      ->select('indoregion_provinces.id' )
+      $last_village = DB::table('indoregion_regencies')
+                      ->select('indoregion_regencies.id' )
                       ->orderBy('id','desc')
                       ->first();
 
